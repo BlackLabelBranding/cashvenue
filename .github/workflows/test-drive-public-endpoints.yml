@@ -1,0 +1,38 @@
+name: Test Hangar 18 Drive Public Endpoints
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [h18brewing-site]
+    paths:
+      - .github/workflows/test-drive-public-endpoints.yml
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Test public Google Drive image endpoints
+        shell: bash
+        run: |
+          set +e
+          id='1w4Q6Cl-U4pQyPYg97-xDjbtJF3BL4LMx'
+          urls=(
+            "https://drive.google.com/thumbnail?id=${id}&sz=w1200"
+            "https://lh3.googleusercontent.com/d/${id}=w1200"
+            "https://drive.google.com/uc?export=view&id=${id}"
+            "https://drive.usercontent.google.com/download?id=${id}&export=download&confirm=t"
+          )
+          i=0
+          for url in "${urls[@]}"; do
+            out="/tmp/test-${i}"
+            echo "--- endpoint ${i}: ${url}"
+            curl -A 'Mozilla/5.0' -L --max-redirs 10 -sS -D "/tmp/headers-${i}" "$url" -o "$out"
+            sed -n '1,20p' "/tmp/headers-${i}"
+            file "$out"
+            wc -c "$out"
+            head -c 80 "$out" | xxd
+            i=$((i+1))
+          done
