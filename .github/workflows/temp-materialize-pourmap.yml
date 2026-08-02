@@ -1,0 +1,133 @@
+name: Temporary PourMap Materializer
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: write
+  pull-requests: read
+
+jobs:
+  materialize:
+    if: github.head_ref == 'pourmap-mvp'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout PourMap branch
+        uses: actions/checkout@v4
+        with:
+          ref: pourmap-mvp
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Decode PourMap project archive
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import base64
+          import glob
+          import io
+          import re
+          import zipfile
+          from pathlib import Path
+
+          paths = sorted(glob.glob('payload/part-*'))
+          if not paths:
+              print('PourMap source is already materialized.')
+              Path('/tmp/already-materialized').touch()
+              raise SystemExit(0)
+
+          parts = [Path(path).read_bytes() for path in paths]
+
+          def cleaned(data):
+              return re.sub(rb'\s+', b'', data)
+
+          def decode64(data):
+              data = cleaned(data)
+              data += b'=' * ((4 - len(data) % 4) % 4)
+              return base64.b64decode(data, validate=False)
+
+          def stages(seed):
+              current = seed
+              seen = set()
+              for _ in range(7):
+                  if current in seen:
+                      return
+                  seen.add(current)
+                  yield current
+                  try:
+                      current = decode64(current)
+                  except Exception:
+                      return
+
+          candidates = [b''.join(parts)]
+          try:
+              candidates.append(b''.join(decode64(part) for part in parts))
+          except Exception:
+              pass
+
+          recursive_parts = []
+          for part in parts:
+              current = part
+              for _ in range(5):
+                  if current.startswith(b'PK\x03\x04'):
+                      break
+                  try:
+                      current = decode64(current)
+                  except Exception:
+                      break
+              recursive_parts.append(current)
+          candidates.append(b''.join(recursive_parts))
+
+          archive = None
+          for candidate in candidates:
+              for value in stages(candidate):
+                  if value.startswith(b'PK\x03\x04') and zipfile.is_zipfile(io.BytesIO(value)):
+                      archive = value
+                      break
+              if archive is not None:
+                  break
+
+          if archive is None:
+              raise SystemExit('Unable to identify a valid PourMap ZIP archive.')
+
+          Path('/tmp/pourmap-mvp.zip').write_bytes(archive)
+          print(f'Decoded a valid {len(archive):,}-byte PourMap archive.')
+          PY
+
+          if [ -f /tmp/already-materialized ]; then
+            exit 0
+          fi
+
+          unzip -t /tmp/pourmap-mvp.zip
+          rm -rf /tmp/pourmap-source
+          mkdir -p /tmp/pourmap-source
+          unzip -q /tmp/pourmap-mvp.zip -d /tmp/pourmap-source
+
+      - name: Replace branch with validated source
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -f /tmp/already-materialized ]; then
+            exit 0
+          fi
+          find . -mindepth 1 -maxdepth 1 ! -name .git -exec rm -rf {} +
+          cp -a /tmp/pourmap-source/. .
+          find app -type f -name '*.js' -print0 | xargs -0 -n1 node --check
+          python -m json.tool manifest.webmanifest >/dev/null
+          python -m json.tool vercel.json >/dev/null
+
+      - name: Commit PourMap source tree
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -f /tmp/already-materialized ]; then
+            exit 0
+          fi
+          git config user.name 'Black Label Automation'
+          git config user.email 'automation@blacklabel1.com'
+          git add -A
+          git commit -m 'Build PourMap mobile discovery MVP'
+          git push origin HEAD:pourmap-mvp
