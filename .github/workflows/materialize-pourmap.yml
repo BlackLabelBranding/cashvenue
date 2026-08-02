@@ -74,7 +74,6 @@ jobs:
                       break
 
           candidates = [b''.join(parts)]
-
           try:
               candidates.append(b''.join(b64(part) for part in parts))
           except Exception:
@@ -96,27 +95,44 @@ jobs:
               individually_decoded.append(decoded)
           candidates.append(b''.join(individually_decoded))
 
-          archive = None
-          for candidate in candidates:
-              for value in variants(candidate):
-                  if value.startswith(b'PK\x03\x04') and zipfile.is_zipfile(io.BytesIO(value)):
-                      archive = value
-                      break
-              if archive is not None:
-                  break
+          zip_candidates = []
+          for candidate_index, candidate in enumerate(candidates):
+              for depth, value in enumerate(variants(candidate)):
+                  if value.startswith(b'PK\x03\x04'):
+                      target = Path(f'/tmp/pourmap-candidate-{candidate_index}-{depth}.zip')
+                      target.write_bytes(value)
+                      zip_candidates.append(target)
+                      print(f'ZIP candidate {target.name}: {len(value):,} bytes; is_zipfile={zipfile.is_zipfile(io.BytesIO(value))}')
 
-          if archive is None:
+          if not zip_candidates:
               prefixes = [part[:32] for part in parts]
               raise SystemExit(f'Unable to decode PourMap archive. Part prefixes: {prefixes!r}')
 
-          destination = Path('/tmp/pourmap-mvp.zip')
-          destination.write_bytes(archive)
-          print(f'Decoded {len(paths)} parts into a valid {len(archive):,}-byte ZIP archive.')
+          # Prefer the largest decoded ZIP candidate. A later repair step validates it.
+          selected = max(zip_candidates, key=lambda path: path.stat().st_size)
+          Path('/tmp/pourmap-mvp.zip').write_bytes(selected.read_bytes())
+          print(f'Selected {selected.name} at {selected.stat().st_size:,} bytes for validation and repair.')
           PY
-          unzip -t /tmp/pourmap-mvp.zip
+
+      - name: Repair and test archive
+        if: steps.source.outputs.needs_materialization == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          if unzip -t /tmp/pourmap-mvp.zip; then
+            echo 'Original decoded archive passed validation.'
+          else
+            echo 'Decoded archive needs repair. Running zip -FF.'
+            rm -f /tmp/pourmap-fixed.zip
+            zip -FF /tmp/pourmap-mvp.zip --out /tmp/pourmap-fixed.zip
+            unzip -t /tmp/pourmap-fixed.zip
+            mv /tmp/pourmap-fixed.zip /tmp/pourmap-mvp.zip
+          fi
           rm -rf /tmp/pourmap-source
           mkdir -p /tmp/pourmap-source
           unzip -q /tmp/pourmap-mvp.zip -d /tmp/pourmap-source
+          echo 'Recovered source files:'
+          find /tmp/pourmap-source -maxdepth 3 -type f -printf '%P\n' | sort
 
       - name: Replace branch contents with PourMap source
         if: steps.source.outputs.needs_materialization == 'true'
@@ -125,6 +141,9 @@ jobs:
           set -euo pipefail
           find . -mindepth 1 -maxdepth 1 ! -name .git -exec rm -rf {} +
           cp -a /tmp/pourmap-source/. .
+          test -f index.html
+          test -f styles.css
+          test -f app/main.js
           find app -type f -name '*.js' -print0 | xargs -0 -n1 node --check
           python -m json.tool manifest.webmanifest >/dev/null
           python -m json.tool vercel.json >/dev/null
