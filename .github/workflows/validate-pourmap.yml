@@ -1,0 +1,71 @@
+name: Validate PourMap MVP
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout PourMap branch
+        uses: actions/checkout@v4
+        with:
+          ref: pourmap-mvp
+
+      - name: Validate required source files
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f index.html
+          test -f styles.css
+          test -f app/main.js
+          test -f app/map-page.js
+          test -f app/ui.js
+          test -f app/api.js
+          test -f app/public-pages.js
+          test -f app/dashboard-page.js
+          test -f assets/pourmap-mark.svg
+          test -f vercel.json
+
+      - name: Validate JavaScript syntax
+        shell: bash
+        run: |
+          set -euo pipefail
+          find app -type f -name '*.js' -print0 | xargs -0 -n1 node --check
+
+      - name: Validate JSON
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m json.tool manifest.webmanifest >/dev/null
+          python -m json.tool vercel.json >/dev/null
+
+      - name: Validate route and integration references
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -q 'renderMapPage' app/main.js
+          grep -q 'bootDashboard' app/main.js
+          grep -q 'pourmap_public_map' app/api.js
+          grep -q 'pourmap_dashboard_bundle' app/api.js
+          grep -q 'pourmap_create_share' app/api.js
+          grep -q 'Promo Proof' app/public-pages.js
+          grep -q 'OpenStreetMap' app/map-page.js
+
+      - name: Package validated site
+        shell: bash
+        run: |
+          zip -r pourmap-mvp.zip index.html styles.css app assets dashboard login manifest.webmanifest robots.txt sitemap.xml vercel.json README.md
+
+      - name: Upload validated artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: pourmap-mvp
+          path: pourmap-mvp.zip
+          retention-days: 30

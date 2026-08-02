@@ -1,64 +1,47 @@
-# CASH Music Venue Database
-The goal of this project is to create an open data portal for music venue information. This means
-we'll serve human and machine readable information free for all to use and distribute. All data 
-will be available under a Creative Commons CC0 declaration, making it public domain.
+# PourMap MVP
 
-To start, we'll offer HTML and JSON endpoints for search and detailed venue data.
+PourMap is a mobile-first nightlife discovery platform that answers one question: **who is behind the bar, where are they working, and what is happening there tonight?**
 
-This simple interface will allow other services to leverage open venue data in their own applications,
-starting with the CASH Music platform. 
+## Working MVP
 
+- Live map with venue pins and stacked bartender PourPins
+- Search by bartender, venue, town, or state
+- Filters for pouring now, tonight, live music, food, tickets, and verified venues
+- Public bartender profiles at `/{slug}` and `/bartender/{slug}`
+- Public venue profiles at `/venue/{slug}`
+- Share pages at `/r/{slug}`
+- Bartender authentication and onboarding
+- Profile photo uploads to the public PourMap Supabase bucket
+- Venue connection requests
+- Bartender-entered shifts with venue-confirmed or self-submitted status
+- Start/end shift check-ins without exposing off-duty locations
+- Approved venue promotions and automatic Promo Proof tracking links
+- Personal results for profile views, clicks, conversions, revenue, points, and cash rewards
+- Consumer follows for venues and bartenders
 
-## Routes
-We'll use a simple URL scheme:
+## Architecture
 
-Search endpoint:
-/venues/term (JSON)
-/venues/term.html (HTML)
+- Static HTML/CSS/JavaScript application deployed on Vercel
+- Leaflet + OpenStreetMap for the discovery map
+- Supabase authentication, storage, database, RPCs, and row-level security
+- Existing Black Label Promo Proof module for campaigns, tracking, conversions, and rewards
+- Hangar 18 is the first connected venue and provides preview data for launch testing
 
-Detail data endpoint:
-/venue/identifier (JSON)
-/venue/identifier.html (HTML)
+## Privacy model
 
+PourMap is a shift map, not a people-tracking map. Bartenders appear at a venue tied to a public shift. It does not publish home locations, off-duty movement, travel routes, or background GPS history.
 
-## Data format
-Search results:
-```JSON
-[
-	{
-		"UUID":"04ft9",
-		"name":"The Echo",
-		"city":"Los Angeles",
-		"country":"USA"
-	},
-	{
-		"UUID":"316y8",
-		"name":"Echoplex",
-		"city":"Los Angeles",
-		"country":"USA"
-	}
-]
+## Branch isolation
+
+This build is maintained on the `pourmap-mvp` branch while a dedicated PourMap repository and production domain are prepared. Do not merge it into the CashVenue main branch.
+
+## Local validation
+
+```bash
+find app -type f -name '*.js' -print0 | xargs -0 -n1 node --check
+python -m json.tool manifest.webmanifest >/dev/null
+python -m json.tool vercel.json >/dev/null
+python -m http.server 8080
 ```
 
-Venue data:
-```JSON
-{
-	"UUID":"04ft9",
-	"name":"The Echo",
-	"type":"venue",
-	"address1":"1822 Sunset Blvd",
-	"address2":"",
-	"city":"Los Angeles",
-	"region":"California",
-	"country":"USA",
-	"postalcode":"90026",
-	"latitude":34.077729,
-	"longitude":-118.260108,
-	"url":"http://www.theecho.com/",
-	"phone":"(213) 413-8200",
-	"email":"",
-	"capacity":350,
-	"creation_date":1427481092,
-	"modification_date":1427483107
-}
-```
+Built by Black Label Branding LLC.
