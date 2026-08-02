@@ -4,7 +4,7 @@ on:
   push:
     branches: [pourmap-mvp]
   pull_request:
-    branches: [main]
+    branches: [main, pourmap-mvp]
     types: [opened, synchronize, reopened]
   workflow_dispatch:
 
@@ -73,8 +73,7 @@ jobs:
                   except Exception:
                       break
 
-          candidates = []
-          candidates.append(b''.join(parts))
+          candidates = [b''.join(parts)]
 
           try:
               candidates.append(b''.join(b64(part) for part in parts))
