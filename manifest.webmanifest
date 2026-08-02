@@ -1,0 +1,17 @@
+{
+  "name": "Hangar 18",
+  "short_name": "Hangar 18",
+  "description": "Craft brews, bold food, live music, events, and tickets in Windsor, Illinois.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#080808",
+  "theme_color": "#b51018",
+  "icons": [
+    {
+      "src": "https://drive.google.com/thumbnail?id=1lz4CHSzYmPePFgKGivw_xgPrkRIdaoCL&sz=w512",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
