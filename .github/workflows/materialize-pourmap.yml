@@ -3,10 +3,14 @@ name: Materialize PourMap MVP
 on:
   push:
     branches: [pourmap-mvp]
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened]
   workflow_dispatch:
 
 permissions:
   contents: write
+  pull-requests: read
 
 jobs:
   materialize:
@@ -37,14 +41,78 @@ jobs:
           python - <<'PY'
           import base64
           import glob
+          import io
+          import re
+          import zipfile
           from pathlib import Path
 
-          parts = sorted(glob.glob('payload/part-*'))
-          encoded = ''.join(Path(path).read_text(encoding='utf-8') for path in parts)
-          encoded = ''.join(encoded.split())
-          archive = base64.b64decode(encoded, validate=False)
-          Path('/tmp/pourmap-mvp.zip').write_bytes(archive)
-          print(f'Decoded {len(parts)} parts into {len(archive):,} bytes.')
+          paths = sorted(glob.glob('payload/part-*'))
+          if not paths:
+              raise SystemExit('No payload parts found.')
+
+          parts = [Path(path).read_bytes() for path in paths]
+
+          def cleaned(data: bytes) -> bytes:
+              return re.sub(rb'\s+', b'', data)
+
+          def b64(data: bytes) -> bytes:
+              data = cleaned(data)
+              data += b'=' * ((4 - len(data) % 4) % 4)
+              return base64.b64decode(data, validate=False)
+
+          def variants(seed: bytes):
+              seen = set()
+              current = seed
+              for _ in range(6):
+                  if current in seen:
+                      break
+                  seen.add(current)
+                  yield current
+                  try:
+                      current = b64(current)
+                  except Exception:
+                      break
+
+          candidates = []
+          candidates.append(b''.join(parts))
+
+          try:
+              candidates.append(b''.join(b64(part) for part in parts))
+          except Exception:
+              pass
+
+          individually_decoded = []
+          for part in parts:
+              decoded = part
+              for _ in range(4):
+                  try:
+                      next_value = b64(decoded)
+                  except Exception:
+                      break
+                  if next_value == decoded:
+                      break
+                  decoded = next_value
+                  if decoded.startswith(b'PK\x03\x04'):
+                      break
+              individually_decoded.append(decoded)
+          candidates.append(b''.join(individually_decoded))
+
+          archive = None
+          for candidate in candidates:
+              for value in variants(candidate):
+                  if value.startswith(b'PK\x03\x04') and zipfile.is_zipfile(io.BytesIO(value)):
+                      archive = value
+                      break
+              if archive is not None:
+                  break
+
+          if archive is None:
+              prefixes = [part[:32] for part in parts]
+              raise SystemExit(f'Unable to decode PourMap archive. Part prefixes: {prefixes!r}')
+
+          destination = Path('/tmp/pourmap-mvp.zip')
+          destination.write_bytes(archive)
+          print(f'Decoded {len(paths)} parts into a valid {len(archive):,}-byte ZIP archive.')
           PY
           unzip -t /tmp/pourmap-mvp.zip
           rm -rf /tmp/pourmap-source
