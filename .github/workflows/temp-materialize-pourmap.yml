@@ -21,7 +21,7 @@ jobs:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Decode PourMap project archive
+      - name: Decode and recover PourMap project archive
         shell: bash
         run: |
           set -euo pipefail
@@ -29,9 +29,12 @@ jobs:
           import base64
           import glob
           import io
+          import os
           import re
+          import struct
           import zipfile
-          from pathlib import Path
+          import zlib
+          from pathlib import Path, PurePosixPath
 
           paths = sorted(glob.glob('payload/part-*'))
           if not paths:
@@ -68,7 +71,7 @@ jobs:
           except Exception:
               pass
 
-          recursive_parts = []
+          recursively_decoded = []
           for part in parts:
               current = part
               for _ in range(5):
@@ -78,33 +81,99 @@ jobs:
                       current = decode64(current)
                   except Exception:
                       break
-              recursive_parts.append(current)
-          candidates.append(b''.join(recursive_parts))
+              recursively_decoded.append(current)
+          candidates.append(b''.join(recursively_decoded))
 
           archive = None
           for candidate in candidates:
               for value in stages(candidate):
-                  if value.startswith(b'PK\x03\x04') and zipfile.is_zipfile(io.BytesIO(value)):
+                  if value.startswith(b'PK\x03\x04'):
                       archive = value
-                      break
+                      if zipfile.is_zipfile(io.BytesIO(value)):
+                          break
               if archive is not None:
                   break
 
           if archive is None:
-              raise SystemExit('Unable to identify a valid PourMap ZIP archive.')
+              raise SystemExit('Unable to identify the PourMap ZIP payload.')
 
           Path('/tmp/pourmap-mvp.zip').write_bytes(archive)
-          print(f'Decoded a valid {len(archive):,}-byte PourMap archive.')
+          print(f'Decoded {len(paths)} parts into {len(archive):,} bytes.')
+
+          destination = Path('/tmp/pourmap-source')
+          if destination.exists():
+              import shutil
+              shutil.rmtree(destination)
+          destination.mkdir(parents=True)
+
+          try:
+              with zipfile.ZipFile(io.BytesIO(archive)) as bundle:
+                  bundle.extractall(destination)
+              print('Extracted with the standard ZIP directory.')
+          except Exception as standard_error:
+              print(f'Standard ZIP extraction failed: {standard_error}')
+              print('Recovering files from sequential local headers.')
+              signature = b'PK\x03\x04'
+              position = 0
+              extracted = 0
+
+              while True:
+                  header_at = archive.find(signature, position)
+                  if header_at < 0:
+                      break
+                  if header_at + 30 > len(archive):
+                      break
+
+                  fields = struct.unpack_from('<IHHHHHIIIHH', archive, header_at)
+                  _, version, flags, method, mtime, mdate, crc, compressed_size, uncompressed_size, name_size, extra_size = fields
+                  name_start = header_at + 30
+                  data_start = name_start + name_size + extra_size
+                  if data_start > len(archive):
+                      break
+
+                  raw_name = archive[name_start:name_start + name_size]
+                  try:
+                      name = raw_name.decode('utf-8' if flags & 0x800 else 'cp437')
+                  except Exception:
+                      position = header_at + 4
+                      continue
+
+                  if flags & 0x08:
+                      raise SystemExit(f'Cannot recover streamed ZIP entry: {name}')
+
+                  data_end = data_start + compressed_size
+                  if data_end > len(archive):
+                      raise SystemExit(f'Truncated ZIP entry: {name}')
+
+                  path = PurePosixPath(name)
+                  if path.is_absolute() or '..' in path.parts:
+                      raise SystemExit(f'Unsafe ZIP path: {name}')
+
+                  output = destination.joinpath(*path.parts)
+                  if name.endswith('/'):
+                      output.mkdir(parents=True, exist_ok=True)
+                  else:
+                      compressed = archive[data_start:data_end]
+                      if method == 0:
+                          payload = compressed
+                      elif method == 8:
+                          payload = zlib.decompress(compressed, -15)
+                      else:
+                          raise SystemExit(f'Unsupported ZIP method {method} for {name}')
+
+                      if uncompressed_size and len(payload) != uncompressed_size:
+                          raise SystemExit(f'Bad recovered size for {name}')
+                      output.parent.mkdir(parents=True, exist_ok=True)
+                      output.write_bytes(payload)
+                      extracted += 1
+                      print(f'Recovered {name} ({len(payload):,} bytes)')
+
+                  position = data_end
+
+              if extracted == 0:
+                  raise SystemExit('No project files could be recovered.')
+              print(f'Recovered {extracted} project files.')
           PY
-
-          if [ -f /tmp/already-materialized ]; then
-            exit 0
-          fi
-
-          unzip -t /tmp/pourmap-mvp.zip
-          rm -rf /tmp/pourmap-source
-          mkdir -p /tmp/pourmap-source
-          unzip -q /tmp/pourmap-mvp.zip -d /tmp/pourmap-source
 
       - name: Replace branch with validated source
         shell: bash
@@ -113,6 +182,9 @@ jobs:
           if [ -f /tmp/already-materialized ]; then
             exit 0
           fi
+          test -f /tmp/pourmap-source/index.html
+          test -f /tmp/pourmap-source/app/main.js
+          test -f /tmp/pourmap-source/vercel.json
           find . -mindepth 1 -maxdepth 1 ! -name .git -exec rm -rf {} +
           cp -a /tmp/pourmap-source/. .
           find app -type f -name '*.js' -print0 | xargs -0 -n1 node --check
