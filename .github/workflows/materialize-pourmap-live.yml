@@ -5,10 +5,14 @@ on:
     branches: [pourmap-live]
     paths:
       - package/part-05
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened]
   workflow_dispatch:
 
 permissions:
   contents: write
+  pull-requests: read
 
 jobs:
   materialize:
