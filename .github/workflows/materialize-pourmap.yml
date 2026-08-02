@@ -5,20 +5,25 @@ on:
     branches: [pourmap-mvp]
     paths:
       - payload/part-07
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened]
   workflow_dispatch:
 
 permissions:
   contents: write
+  pull-requests: read
 
 jobs:
   materialize:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout branch
+      - name: Checkout source branch
         uses: actions/checkout@v4
         with:
           ref: pourmap-mvp
           fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Decode validated project archive
         shell: bash
