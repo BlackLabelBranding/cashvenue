@@ -81,16 +81,6 @@ function wirePublicPage() {
     document.querySelectorAll(".menu-tab").forEach((item) => item.classList.toggle("is-active", item === button));
     document.querySelector(`#${CSS.escape(button.dataset.menuTarget)}`)?.scrollIntoView({ behavior:"smooth", block:"start" });
   }));
-  document.querySelectorAll("a.js-route").forEach((link) => {
-    if (link.dataset.routeWired) return;
-    link.dataset.routeWired = "true";
-    link.addEventListener("click", (event) => {
-      if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || link.target === "_blank") return;
-      const url = new URL(link.href);
-      if (url.origin !== location.origin) return;
-      event.preventDefault(); navigate(url.pathname + url.search);
-    });
-  });
 }
 
 async function renderEvent(path) {
