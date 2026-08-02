@@ -3,18 +3,13 @@ name: Materialize PourMap MVP
 on:
   push:
     branches: [pourmap-mvp]
-  pull_request:
-    branches: [main]
-    types: [opened, synchronize, reopened]
   workflow_dispatch:
 
 permissions:
   contents: write
-  pull-requests: read
 
 jobs:
   materialize:
-    if: ${{ hashFiles('payload/part-*') != '' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout source branch
@@ -24,7 +19,18 @@ jobs:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Detect materialized source
+        id: source
+        shell: bash
+        run: |
+          if compgen -G 'payload/part-*' >/dev/null; then
+            echo 'needs_materialization=true' >> "$GITHUB_OUTPUT"
+          else
+            echo 'needs_materialization=false' >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Decode validated project archive
+        if: steps.source.outputs.needs_materialization == 'true'
         shell: bash
         run: |
           set -euo pipefail
@@ -34,9 +40,6 @@ jobs:
           from pathlib import Path
 
           parts = sorted(glob.glob('payload/part-*'))
-          if not parts:
-              raise SystemExit('No PourMap payload parts were found.')
-
           encoded = ''.join(Path(path).read_text(encoding='utf-8') for path in parts)
           encoded = ''.join(encoded.split())
           archive = base64.b64decode(encoded, validate=False)
@@ -49,6 +52,7 @@ jobs:
           unzip -q /tmp/pourmap-mvp.zip -d /tmp/pourmap-source
 
       - name: Replace branch contents with PourMap source
+        if: steps.source.outputs.needs_materialization == 'true'
         shell: bash
         run: |
           set -euo pipefail
@@ -59,6 +63,7 @@ jobs:
           python -m json.tool vercel.json >/dev/null
 
       - name: Commit complete source tree
+        if: steps.source.outputs.needs_materialization == 'true'
         shell: bash
         run: |
           set -euo pipefail
