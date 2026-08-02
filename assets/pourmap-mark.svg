@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 144" role="img" aria-label="PourMap">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#36f1dd"/>
+      <stop offset=".48" stop-color="#45a8ff"/>
+      <stop offset="1" stop-color="#ff4fa3"/>
+    </linearGradient>
+    <filter id="s" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="10" stdDeviation="8" flood-color="#000" flood-opacity=".34"/>
+    </filter>
+  </defs>
+  <path filter="url(#s)" d="M60 4C30 4 6 27 6 57c0 39 42 77 50 84 2 2 6 2 8 0 8-7 50-45 50-84C114 27 90 4 60 4Z" fill="url(#g)"/>
+  <circle cx="60" cy="57" r="35" fill="#080b12"/>
+  <path d="M35 43h50L64 67v15h13v7H43v-7h13V67L35 43Zm13 7 12 12 12-12H48Z" fill="#fff"/>
+  <path d="M72 29c7 0 13 4 16 9-5-2-9-1-13 1-5 3-9 3-14 0 2-6 5-10 11-10Z" fill="#dfff4f"/>
+</svg>
