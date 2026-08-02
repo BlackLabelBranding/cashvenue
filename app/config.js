@@ -13,15 +13,15 @@ export const CONFIG = Object.freeze({
     ["/contact", "Contact"]
   ],
   assets: {
-    logo: "https://drive.google.com/thumbnail?id=1lz4CHSzYmPePFgKGivw_xgPrkRIdaoCL&sz=w1200",
-    hero: "https://drive.google.com/thumbnail?id=1w4Q6Cl-U4pQyPYg97-xDjbtJF3BL4LMx&sz=w2400",
-    exterior: "https://drive.google.com/thumbnail?id=1w4Q6Cl-U4pQyPYg97-xDjbtJF3BL4LMx&sz=w2400",
-    pizza: "https://drive.google.com/thumbnail?id=1cvgbnvu0ejZjNTm8pMUel2jAtQwEF2sC&sz=w1800",
-    interior: "https://drive.google.com/thumbnail?id=1rvuGNORd8grg_F3xd0V0_xdV_Q4PPzr6&sz=w1800",
-    beer: "https://drive.google.com/thumbnail?id=1BZeo8HCioD0gK4GgU73A0WvV6P7EZePP&sz=w1600",
-    beerAlt: "https://drive.google.com/thumbnail?id=1CGnTTLKAKZamraAyMTIQAabgQBNmAFeQ&sz=w1600",
-    bella: "https://drive.google.com/thumbnail?id=1YOaQtO_mkHDueAmBPIl7DykiB1ZcYaLE&sz=w1600",
-    josh: "https://drive.google.com/thumbnail?id=1NnRyO57oQeEAC8kMjVgNxD_O77YoiyqC&sz=w2000"
+    logo: "/assets/logo.png",
+    hero: "/assets/hero.jpg",
+    exterior: "/assets/hero.jpg",
+    pizza: "/assets/pizza.jpg",
+    interior: "/assets/venue.jpg",
+    beer: "/assets/venue.jpg",
+    beerAlt: "/assets/hero.jpg",
+    bella: "/assets/bella.png",
+    josh: "/assets/josh-holland.png"
   }
 });
 
