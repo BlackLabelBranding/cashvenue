@@ -3,6 +3,8 @@ name: Validate Hangar 18 Site
 on:
   push:
     branches: [h18brewing-site]
+  pull_request:
+    branches: [main]
   workflow_dispatch:
 
 permissions:
