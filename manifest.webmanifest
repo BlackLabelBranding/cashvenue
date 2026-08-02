@@ -1,0 +1,10 @@
+{
+  "name": "PourMap",
+  "short_name": "PourMap",
+  "description": "See who's pouring near you and discover tonight's venues and events.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#090b12",
+  "theme_color": "#090b12",
+  "icons": []
+}
