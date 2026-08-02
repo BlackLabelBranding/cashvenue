@@ -3,8 +3,6 @@ name: Materialize PourMap MVP
 on:
   push:
     branches: [pourmap-mvp]
-    paths:
-      - payload/part-07
   pull_request:
     branches: [main]
     types: [opened, synchronize, reopened]
@@ -16,6 +14,7 @@ permissions:
 
 jobs:
   materialize:
+    if: ${{ hashFiles('payload/part-*') != '' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout source branch
@@ -29,8 +28,23 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          cat payload/part-* | base64 --decode > /tmp/pourmap-mvp.zip
+          python - <<'PY'
+          import base64
+          import glob
+          from pathlib import Path
+
+          parts = sorted(glob.glob('payload/part-*'))
+          if not parts:
+              raise SystemExit('No PourMap payload parts were found.')
+
+          encoded = ''.join(Path(path).read_text(encoding='utf-8') for path in parts)
+          encoded = ''.join(encoded.split())
+          archive = base64.b64decode(encoded, validate=False)
+          Path('/tmp/pourmap-mvp.zip').write_bytes(archive)
+          print(f'Decoded {len(parts)} parts into {len(archive):,} bytes.')
+          PY
           unzip -t /tmp/pourmap-mvp.zip
+          rm -rf /tmp/pourmap-source
           mkdir -p /tmp/pourmap-source
           unzip -q /tmp/pourmap-mvp.zip -d /tmp/pourmap-source
 
