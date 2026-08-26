@@ -150,7 +150,7 @@ function initMap() {
   if(!window.L){document.querySelector('#map').innerHTML='<div class="empty-state" style="margin:90px 20px">Map tiles could not load. Venue discovery is still available in the list.</div>';return;}
   mapView.map=L.map('map',{zoomControl:false,attributionControl:true}).setView([mapView.location.latitude,mapView.location.longitude],9);
   L.control.zoom({position:'bottomright'}).addTo(mapView.map);
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{maxZoom:20,attribution:'&copy; OpenStreetMap contributors &copy; CARTO'}).addTo(mapView.map);
+  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'}).addTo(mapView.map);
 }
 async function loadMap() {
   const status=document.querySelector('[data-map-status]'); if(status)status.textContent='Refreshing venue and shift data…';
