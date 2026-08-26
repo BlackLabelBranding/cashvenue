@@ -1,64 +1,26 @@
-# CASH Music Venue Database
-The goal of this project is to create an open data portal for music venue information. This means
-we'll serve human and machine readable information free for all to use and distribute. All data 
-will be available under a Creative Commons CC0 declaration, making it public domain.
+# PourMap MVP
 
-To start, we'll offer HTML and JSON endpoints for search and detailed venue data.
+PourMap is a mobile-first nightlife discovery platform that shows customers who is behind the bar, what is happening at the venue, and where to go tonight.
 
-This simple interface will allow other services to leverage open venue data in their own applications,
-starting with the CASH Music platform. 
+## Included
 
+- Live map with venue pins and bartender PourPins
+- Search and nightlife filters
+- Public bartender, venue, and personalized promotion pages
+- Bartender signup, profile, avatar styling, and photo uploads
+- Venue connection requests and bartender-entered shifts
+- Shift check-in/check-out without off-duty location tracking
+- Venue promotion library with automatic Promo Proof attribution links
+- Personal performance, conversion, revenue, and reward reporting
+- Customer follows
+- Hangar 18 as the first connected venue
 
-## Routes
-We'll use a simple URL scheme:
+## Data architecture
 
-Search endpoint:
-/venues/term (JSON)
-/venues/term.html (HTML)
+PourMap uses the existing Black Label Promo Proof Supabase foundation for campaigns, tracking links, conversions, and rewards. PourMap-specific tables handle check-ins, follows, share pages, discovery activity, and customer/bartender profiles.
 
-Detail data endpoint:
-/venue/identifier (JSON)
-/venue/identifier.html (HTML)
+## Privacy model
 
+Bartenders appear at a venue only through a public shift and/or active shift check-in. PourMap does not expose home locations, background movement, last-seen locations, or off-duty tracking.
 
-## Data format
-Search results:
-```JSON
-[
-	{
-		"UUID":"04ft9",
-		"name":"The Echo",
-		"city":"Los Angeles",
-		"country":"USA"
-	},
-	{
-		"UUID":"316y8",
-		"name":"Echoplex",
-		"city":"Los Angeles",
-		"country":"USA"
-	}
-]
-```
-
-Venue data:
-```JSON
-{
-	"UUID":"04ft9",
-	"name":"The Echo",
-	"type":"venue",
-	"address1":"1822 Sunset Blvd",
-	"address2":"",
-	"city":"Los Angeles",
-	"region":"California",
-	"country":"USA",
-	"postalcode":"90026",
-	"latitude":34.077729,
-	"longitude":-118.260108,
-	"url":"http://www.theecho.com/",
-	"phone":"(213) 413-8200",
-	"email":"",
-	"capacity":350,
-	"creation_date":1427481092,
-	"modification_date":1427483107
-}
-```
+Created by Black Label Branding LLC.
