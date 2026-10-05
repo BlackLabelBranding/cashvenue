@@ -225,6 +225,7 @@ export async function createCampaign(token, venueId, values) {
     method: "POST", token, headers: { Prefer: "return=representation" },
     body: {
       venue_id: venueId,
+      ticket_capacity: values.ticket_capacity === "" || values.ticket_capacity == null ? null : Number(values.ticket_capacity),
       name: values.name,
       slug: values.slug,
       description: values.description || null,
@@ -263,6 +264,9 @@ export async function createTicketType(token, values) {
       external_purchase_url: values.external_purchase_url || null,
       status: values.status || "active",
       sort_order: Number(values.sort_order || 0),
+      guests_per_ticket: Number(values.guests_per_ticket || 1),
+      deposit_percent: Number(values.deposit_percent || 0),
+      balance_due_at: values.balance_due_at ? new Date(values.balance_due_at).toISOString() : null,
       metadata: {}
     }
   });

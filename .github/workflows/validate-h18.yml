@@ -4,7 +4,7 @@ on:
   push:
     branches: [h18brewing-site]
   pull_request:
-    branches: [main]
+    branches: [main, h18brewing-site]
   workflow_dispatch:
 
 permissions:
@@ -43,7 +43,7 @@ jobs:
 
       - name: Package site
         run: |
-          zip -r h18brewing-site.zip index.html styles.css app manifest.webmanifest robots.txt sitemap.xml vercel.json README-H18.md
+          zip -r h18brewing-site.zip index.html styles.css app ticket admin event manifest.webmanifest robots.txt sitemap.xml vercel.json README-H18.md
 
       - name: Upload validated site artifact
         uses: actions/upload-artifact@v4

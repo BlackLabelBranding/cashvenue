@@ -1,3 +1,4 @@
+import { ticketPage } from "./ticketing.js";
 import { CONFIG, FALLBACK_EVENTS, FALLBACK_SITE } from "./config.js";
 import { bootAdmin } from "./admin-ui.js";
 import { eventPage, wireEventPage } from "./event-page.js";
@@ -100,7 +101,8 @@ async function render() {
   const path = cleanPath();
   setHead(path);
   if (path === "/admin") { await bootAdmin(); return; }
-  if (path.startsWith("/event/")) await renderEvent(path);
+  if (path === "/ticket") { await ticketPage(bundle.site); wireShell(); }
+  else if (path.startsWith("/event/")) await renderEvent(path);
   else { appRoot.innerHTML = publicShell(bundle.site, pageFor(path)); wirePublicPage(); }
   if (trackedPath !== path) {
     trackedPath = path;

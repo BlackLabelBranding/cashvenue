@@ -1,5 +1,6 @@
+import { checkout } from "./ticketing.js";
 import { CONFIG } from "./config.js";
-import { createTicketOrder, submitForm, track, trackingState } from "./supabase.js";
+import { submitForm, track, trackingState } from "./supabase.js";
 import { escapeHtml, eventImage, formatDate, icon, pageHero, publicEventSlug, safeUrl, showToast } from "./ui.js";
 
 function money(value) {
@@ -17,11 +18,11 @@ function externalUrl(event, ticket) {
 }
 
 function ticketOption(ticket, event) {
-  const remaining = ticket.quantity_total == null ? null : Math.max(0, Number(ticket.quantity_total) - Number(ticket.quantity_sold || 0));
+  const remaining = ticket.quantity_total == null ? null : Math.max(0, Number(ticket.quantity_total) - Number(ticket.quantity_sold || 0) - Number(ticket.quantity_reserved || 0));
   const external = externalUrl(event, ticket);
   const price = ticket.price_label || (Number(ticket.price_amount) ? money(ticket.price_amount) : "Free");
   return `<article class="ticket-option" data-ticket-id="${ticket.id}">
-    <div class="ticket-option__head"><div><h3>${escapeHtml(ticket.name)}</h3><strong>${escapeHtml(price)}</strong></div>${external ? `<a class="button button--primary button--small js-external-ticket" href="${safeUrl(external)}" target="_blank" rel="noreferrer">Buy ${icon("external")}</a>` : `<select class="input quantity" name="qty-${ticket.id}" aria-label="Quantity for ${escapeHtml(ticket.name)}"><option value="0">0</option>${Array.from({ length: Math.max(1, Math.min(Number(ticket.max_per_order || 10), remaining == null ? 10 : remaining)) }, (_, index) => `<option value="${index + 1}">${index + 1}</option>`).join("")}</select>`}</div>
+    <div class="ticket-option__head"><div><h3>${escapeHtml(ticket.name)}</h3><strong>${escapeHtml(price)}</strong></div>${external ? `<a class="button button--primary button--small js-external-ticket" href="${safeUrl(external)}" target="_blank" rel="noreferrer">Buy ${icon("external")}</a>` : `<select class="input quantity" ${remaining === 0 || ticket.status !== "active" ? "disabled" : ""} name="qty-${ticket.id}" aria-label="Quantity for ${escapeHtml(ticket.name)}"><option value="0">0</option>${Array.from({ length: Math.max(0, Math.min(Number(ticket.max_per_order || 10), remaining == null ? 10 : remaining)) }, (_, index) => `<option value="${index + 1}">${index + 1}</option>`).join("")}</select>`}</div>
     ${ticket.description ? `<p>${escapeHtml(ticket.description)}</p>` : ""}
     ${remaining != null ? `<span class="badge${remaining < 20 ? " badge--red" : ""}">${remaining ? `${remaining} remaining` : "Sold out"}</span>` : ""}
   </article>`;
@@ -43,7 +44,7 @@ export function eventPage(site, event) {
 
   return `${pageHero({ eyebrow: "LIVE AT HANGAR 18", title: event.name, copy: meta.special_guest ? `With ${meta.special_guest}` : event.description || "Live at Hangar 18.", image })}
   <section class="event-detail"><div class="container event-detail__layout"><article class="event-detail__main"><img class="event-detail__image" src="${safeUrl(image)}" alt="${escapeHtml(event.name)}" /><div class="event-detail__content"><div class="button-row"><span class="badge badge--yellow">${icon("calendar")} ${escapeHtml(formatDate(event.starts_at))}</span><span class="badge">${icon("ticket")} ${escapeHtml(String(price))}</span>${meta.tickets_remaining ? `<span class="badge badge--red">${escapeHtml(meta.tickets_remaining)} tickets reported remaining</span>` : ""}</div><h1>${escapeHtml(event.name)}</h1>${meta.special_guest ? `<p><strong>Special guest: ${escapeHtml(meta.special_guest)}</strong></p>` : ""}<p>${escapeHtml(event.description || "Join us for live music at Hangar 18 in Windsor, Illinois.")}</p><div class="button-row"><button class="button button--ghost js-share-event" type="button" data-url="${escapeHtml(eventUrl)}">${icon("share")} Share Event</button><a class="button button--ghost" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent("Hangar 18, 1112 Maine St, Windsor, IL 61957")}" target="_blank" rel="noreferrer">${icon("pin")} Directions</a></div></div></article>
-  <aside class="ticket-panel"><h2>Tickets & Entry</h2><p class="copy">Choose the available ticket option or send the venue a ticket request.</p>${tickets.length ? `<div>${tickets.map((ticket) => ticketOption(ticket, event)).join("")}</div>${tickets.some((ticket) => !externalUrl(event, ticket) && ticket.status === "active") ? `<form class="js-ticket-order" data-event-slug="${escapeHtml(event.slug)}"><div class="field"><label>Name</label><input name="name" required autocomplete="name" /></div><div class="field"><label>Email</label><input name="email" type="email" required autocomplete="email" /></div><div class="field"><label>Phone</label><input name="phone" type="tel" autocomplete="tel" /></div><button class="button button--primary" type="submit">Reserve Selected Tickets</button><p class="form-status" role="status"></p></form>` : ""}` : mainExternal ? `<a class="button button--primary js-external-ticket" href="${safeUrl(mainExternal)}" target="_blank" rel="noreferrer">Get Tickets ${icon("external")}</a><p class="copy">Ticket checkout opens in a secure window.</p>` : `${ticketRequestForm(event)}`}</aside></div></section>`;
+  <aside class="ticket-panel"><h2>Tickets & Entry</h2><p class="copy">Choose the available ticket option or send the venue a ticket request.</p>${tickets.length ? `<div>${tickets.map((ticket) => ticketOption(ticket, event)).join("")}</div>${tickets.some((ticket) => !externalUrl(event, ticket) && ticket.status === "active") ? `<form class="js-ticket-order" data-event-slug="${escapeHtml(event.slug)}"><div class="field"><label>Name</label><input name="name" required autocomplete="name" /></div><div class="field"><label>Email</label><input name="email" type="email" required autocomplete="email" /></div><div class="field"><label>Phone</label><input name="phone" type="tel" autocomplete="tel" /></div>${tickets.some(t => t.deposit_percent > 0) ? `<div class="field"><label><input name="pay_deposit" type="checkbox" /> Pay the available deposit now; pay the remaining balance before entry.</label></div>` : ""}<p class="copy js-order-total" aria-live="polite"></p><button class="button button--primary" type="submit">Continue to Checkout</button><p class="form-status" role="status"></p></form>` : ""}` : mainExternal ? `<a class="button button--primary js-external-ticket" href="${safeUrl(mainExternal)}" target="_blank" rel="noreferrer">Get Tickets ${icon("external")}</a><p class="copy">Ticket checkout opens in a secure window.</p>` : `${ticketRequestForm(event)}`}</aside></div></section>`;
 }
 
 function values(form) {
@@ -65,6 +66,30 @@ export function wireEventPage(event) {
     }
   });
 
+  const orderForm = document.querySelector('.js-ticket-order');
+  const updateTotal = () => {
+    if (!orderForm) return;
+    delete orderForm.dataset.requestId;
+    const depositInput = orderForm.querySelector('[name="pay_deposit"]');
+    const selectedPaid = (event.ticket_types || []).filter(ticket => Number(ticket.price_amount) > 0 && Number(orderForm.closest('.ticket-panel').querySelector(`[name="qty-${ticket.id}"]`)?.value || 0) > 0);
+    if (depositInput) {
+      depositInput.disabled = !selectedPaid.length || !selectedPaid.every(ticket => ticket.deposit_percent > 0 && new Date(ticket.balance_due_at) > new Date());
+      if (depositInput.disabled) depositInput.checked = false;
+    }
+    const deposit = depositInput?.checked;
+    let total = 0, due = 0;
+    for (const ticket of event.ticket_types || []) {
+      const quantity = Number(orderForm.closest('.ticket-panel').querySelector(`[name="qty-${ticket.id}"]`)?.value || 0);
+      const line = Number(ticket.price_amount || 0) * quantity;
+      total += line; due += deposit && ticket.deposit_percent > 0 ? Math.round(line * ticket.deposit_percent) / 100 : line;
+    }
+    const label = orderForm.querySelector('.js-order-total');
+    if (label) label.textContent = total ? `Total ${money(total)}${due < total ? ` · Pay now ${money(due)} · Balance ${money(total - due)}` : ''}` : '';
+  };
+  updateTotal();
+  document.querySelector('.ticket-panel')?.addEventListener('change', updateTotal);
+  orderForm?.addEventListener('input', () => { delete orderForm.dataset.requestId; });
+
   document.querySelector(".js-ticket-order")?.addEventListener("submit", async (submitEvent) => {
     submitEvent.preventDefault();
     const form = submitEvent.currentTarget;
@@ -75,12 +100,8 @@ export function wireEventPage(event) {
     if (!items.length) { status.textContent = "Choose at least one ticket."; status.className = "form-status is-error"; return; }
     button.disabled = true; status.textContent = "Creating your ticket order…"; status.className = "form-status";
     try {
-      const result = await createTicketOrder(event.slug, customer, items);
-      if (!result?.ok) throw new Error("The order could not be created.");
-      const total = Number(result.total_amount || 0);
-      const qr = result.qr_token ? `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(result.qr_token)}` : "";
-      form.innerHTML = `<div class="confirmation"><strong>${result.status === "confirmed" ? "Tickets confirmed." : "Ticket reservation received."}</strong><p>Order ${escapeHtml(result.order_number)}${total ? ` • ${money(total)}` : ""}</p><p>${result.requires_payment ? "Hangar 18 will confirm payment instructions. Your tickets are held only after payment is confirmed." : "Save this confirmation and bring a photo ID to the event."}</p>${qr ? `<img src="${qr}" alt="Ticket check-in QR code" />` : ""}</div>`;
-      await track("click", { source: "native-ticket-order", medium: "ticket-order", event_id: event.id, order_number: result.order_number });
+      form.dataset.requestId ||= crypto.randomUUID();
+      await checkout(event.slug, customer, items, form.querySelector('[name="pay_deposit"]')?.checked === true, form.dataset.requestId);
     } catch (error) {
       status.textContent = error.message || "The ticket order could not be created.";
       status.className = "form-status is-error";
