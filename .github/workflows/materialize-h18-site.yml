@@ -1,0 +1,147 @@
+name: Materialize Hangar 18 Site Assets
+
+on:
+  push:
+    branches: [h18brewing-site]
+    paths:
+      - .github/workflows/materialize-h18-site.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  materialize:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Hangar 18 branch
+        uses: actions/checkout@v4
+        with:
+          ref: h18brewing-site
+          fetch-depth: 0
+
+      - name: Download client-owned Hangar 18 assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p assets
+
+          download_drive_file() {
+            local output="$1"
+            local id="$2"
+            local primary="https://drive.usercontent.google.com/download?id=${id}&export=download&confirm=t"
+            local fallback="https://drive.google.com/uc?export=download&id=${id}&confirm=t"
+            echo "Downloading ${output}"
+            if ! curl --fail --location --retry 3 --silent --show-error "$primary" --output "$output"; then
+              curl --fail --location --retry 3 --silent --show-error "$fallback" --output "$output"
+            fi
+            test -s "$output"
+            file "$output"
+          }
+
+          download_drive_file assets/logo.png 1lz4CHSzYmPePFgKGivw_xgPrkRIdaoCL
+          download_drive_file assets/hero.jpg 1w4Q6Cl-U4pQyPYg97-xDjbtJF3BL4LMx
+          download_drive_file assets/venue.jpg 1BZeoHgZLRonEOpSPJJjEaG41jMkQYjTY
+          download_drive_file assets/pizza.jpg 1CGUw9X8Wyb0yFmNDBfX3TIkWR1lc9GMy
+          download_drive_file assets/bella.png 1YOaQtO_mkHDueAmBPIl7DykiB1ZcYaLE
+          download_drive_file assets/josh-holland.png 1NnRyO57oQeEAC8kMjVgNxD_O77YoiyqC
+
+      - name: Replace Drive hotlinks and add direct route files
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          import json
+
+          config = Path('app/config.js')
+          text = config.read_text()
+          replacements = {
+              'https://drive.google.com/thumbnail?id=1lz4CHSzYmPePFgKGivw_xgPrkRIdaoCL&sz=w1200': '/assets/logo.png',
+              'https://drive.google.com/thumbnail?id=1w4Q6Cl-U4pQyPYg97-xDjbtJF3BL4LMx&sz=w2400': '/assets/hero.jpg',
+              'https://drive.google.com/thumbnail?id=1cvgbnvu0ejZjNTm8pMUel2jAtQwEF2sC&sz=w1800': '/assets/pizza.jpg',
+              'https://drive.google.com/thumbnail?id=1rvuGNORd8grg_F3xd0V0_xdV_Q4PPzr6&sz=w1800': '/assets/venue.jpg',
+              'https://drive.google.com/thumbnail?id=1BZeo8HCioD0gK4GgU73A0WvV6P7EZePP&sz=w1600': '/assets/venue.jpg',
+              'https://drive.google.com/thumbnail?id=1CGnTTLKAKZamraAyMTIQAabgQBNmAFeQ&sz=w1600': '/assets/hero.jpg',
+              'https://drive.google.com/thumbnail?id=1YOaQtO_mkHDueAmBPIl7DykiB1ZcYaLE&sz=w1600': '/assets/bella.png',
+              'https://drive.google.com/thumbnail?id=1NnRyO57oQeEAC8kMjVgNxD_O77YoiyqC&sz=w2000': '/assets/josh-holland.png',
+          }
+          for old, new in replacements.items():
+              text = text.replace(old, new)
+          config.write_text(text)
+
+          index = Path('index.html')
+          html = index.read_text()
+          html = html.replace('https://drive.google.com/thumbnail?id=1w4Q6Cl-U4pQyPYg97-xDjbtJF3BL4LMx&sz=w2000', '/assets/hero.jpg')
+          html = html.replace('https://drive.google.com/thumbnail?id=1lz4CHSzYmPePFgKGivw_xgPrkRIdaoCL&sz=w256', '/assets/logo.png')
+          html = html.replace('https://drive.google.com/thumbnail?id=1lz4CHSzYmPePFgKGivw_xgPrkRIdaoCL&sz=w600', '/assets/logo.png')
+          index.write_text(html)
+
+          routes = [
+              'admin', 'about-us', 'menu', 'beer', 'events', 'private-events', 'jobs', 'contact',
+              'event', 'event/emberline', 'event/josh-holland-2', 'event/fuedin-hillbillys',
+              'event/identity-crisis', 'event/1973-a-tribute-to-journey-2', 'event/the-wandering-horses'
+          ]
+          for route in routes:
+              target = Path(route) / 'index.html'
+              target.parent.mkdir(parents=True, exist_ok=True)
+              target.write_text(html)
+          Path('404.html').write_text(html)
+
+          manifest = {
+              'name': 'Hangar 18',
+              'short_name': 'Hangar 18',
+              'description': 'Craft brews, bold food, live music, events, and tickets in Windsor, Illinois.',
+              'start_url': '/',
+              'display': 'standalone',
+              'background_color': '#080808',
+              'theme_color': '#b51018',
+              'icons': [
+                  {'src': '/assets/logo.png', 'sizes': '512x512', 'type': 'image/png', 'purpose': 'any maskable'}
+              ]
+          }
+          Path('manifest.webmanifest').write_text(json.dumps(manifest, indent=2) + '\n')
+
+          vercel = {
+              '$schema': 'https://openapi.vercel.sh/vercel.json',
+              'cleanUrls': True,
+              'trailingSlash': False,
+              'rewrites': [
+                  {'source': '/admin', 'destination': '/admin/index.html'},
+                  {'source': '/about', 'destination': '/about-us/index.html'},
+                  {'source': '/food', 'destination': '/menu/index.html'},
+                  {'source': '/craft-brews', 'destination': '/beer/index.html'},
+                  {'source': '/contact-us', 'destination': '/contact/index.html'}
+              ],
+              'headers': [
+                  {
+                      'source': '/(.*)',
+                      'headers': [
+                          {'key': 'X-Content-Type-Options', 'value': 'nosniff'},
+                          {'key': 'Referrer-Policy', 'value': 'strict-origin-when-cross-origin'},
+                          {'key': 'X-Frame-Options', 'value': 'DENY'},
+                          {'key': 'Permissions-Policy', 'value': 'camera=(), microphone=(), geolocation=(self)'},
+                          {'key': 'Content-Security-Policy', 'value': "default-src 'self'; img-src 'self' data: https://api.qrserver.com https:; connect-src 'self' https://xopcttkrmjvwdddawdaa.supabase.co; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; frame-src https://www.google.com; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'"}
+                      ]
+                  },
+                  {'source': '/assets/(.*)', 'headers': [{'key': 'Cache-Control', 'value': 'public, max-age=31536000, immutable'}]},
+                  {'source': '/app/(.*)', 'headers': [{'key': 'Cache-Control', 'value': 'public, max-age=0, must-revalidate'}]},
+                  {'source': '/styles.css', 'headers': [{'key': 'Cache-Control', 'value': 'public, max-age=0, must-revalidate'}]}
+              ]
+          }
+          Path('vercel.json').write_text(json.dumps(vercel, indent=2) + '\n')
+          PY
+
+      - name: Commit materialized assets and routes
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "Black Label Build Bot"
+          git config user.email "buildbot@blacklabel1.com"
+          git add assets app/config.js index.html manifest.webmanifest vercel.json 404.html admin about-us menu beer events private-events jobs contact event
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+            exit 0
+          fi
+          git commit -m "Host Hangar 18 images locally and fix direct routes"
+          git push origin HEAD:h18brewing-site

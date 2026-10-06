@@ -1,0 +1,35 @@
+name: Test Hangar 18 Drive Assets
+
+on:
+  push:
+    branches: [h18brewing-site]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test-assets:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Test public image endpoints
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/h18-assets
+          download() {
+            local name="$1"
+            local id="$2"
+            local url="https://drive.usercontent.google.com/download?id=${id}&export=download&confirm=t"
+            echo "Downloading ${name}"
+            curl --fail --location --silent --show-error "$url" --output "/tmp/h18-assets/${name}"
+            file "/tmp/h18-assets/${name}"
+            test -s "/tmp/h18-assets/${name}"
+          }
+          download logo.png 1lz4CHSzYmPePFgKGivw_xgPrkRIdaoCL
+          download hero.jpg 1w4Q6Cl-U4pQyPYg97-xDjbtJF3BL4LMx
+          download venue.jpg 1BZeoHgZLRonEOpSPJJjEaG41jMkQYjTY
+          download pizza.jpg 1CGUw9X8Wyb0yFmNDBfX3TIkWR1lc9GMy
+          download bella.png 1YOaQtO_mkHDueAmBPIl7DykiB1ZcYaLE
+          download josh.png 1NnRyO57oQeEAC8kMjVgNxD_O77YoiyqC
+          ls -lh /tmp/h18-assets
