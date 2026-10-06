@@ -1,3 +1,4 @@
+import { externalTicketUrl, eventHasEnded } from "./event-data.js";
 import { checkout } from "./ticketing.js";
 import { CONFIG } from "./config.js";
 import { submitForm, track, trackingState } from "./supabase.js";
@@ -7,15 +8,7 @@ function money(value) {
   return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(Number(value || 0));
 }
 
-function externalUrl(event, ticket) {
-  const candidate = ticket?.external_purchase_url || event?.metadata?.external_ticket_url || event?.destination_url || "";
-  if (!candidate) return "";
-  try {
-    const url = new URL(candidate, location.origin);
-    const sameEvent = url.origin === location.origin && url.pathname.replace(/\/$/, "") === location.pathname.replace(/\/$/, "");
-    return sameEvent ? "" : url.href;
-  } catch { return ""; }
-}
+const externalUrl = (event, ticket) => externalTicketUrl(event, ticket, location.origin);
 
 function ticketOption(ticket, event) {
   const remaining = ticket.quantity_total == null ? null : Math.max(0, Number(ticket.quantity_total) - Number(ticket.quantity_sold || 0) - Number(ticket.quantity_reserved || 0));
@@ -44,7 +37,7 @@ export function eventPage(site, event) {
 
   return `${pageHero({ eyebrow: "LIVE AT HANGAR 18", title: event.name, copy: meta.special_guest ? `With ${meta.special_guest}` : event.description || "Live at Hangar 18.", image })}
   <section class="event-detail"><div class="container event-detail__layout"><article class="event-detail__main"><img class="event-detail__image" src="${safeUrl(image)}" alt="${escapeHtml(event.name)}" /><div class="event-detail__content"><div class="button-row"><span class="badge badge--yellow">${icon("calendar")} ${escapeHtml(formatDate(event.starts_at))}</span><span class="badge">${icon("ticket")} ${escapeHtml(String(price))}</span>${meta.tickets_remaining ? `<span class="badge badge--red">${escapeHtml(meta.tickets_remaining)} tickets reported remaining</span>` : ""}</div><h1>${escapeHtml(event.name)}</h1>${meta.special_guest ? `<p><strong>Special guest: ${escapeHtml(meta.special_guest)}</strong></p>` : ""}<p>${escapeHtml(event.description || "Join us for live music at Hangar 18 in Windsor, Illinois.")}</p><div class="button-row"><button class="button button--ghost js-share-event" type="button" data-url="${escapeHtml(eventUrl)}">${icon("share")} Share Event</button><a class="button button--ghost" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent("Hangar 18, 1112 Maine St, Windsor, IL 61957")}" target="_blank" rel="noreferrer">${icon("pin")} Directions</a></div></div></article>
-  <aside class="ticket-panel"><h2>Tickets & Entry</h2><p class="copy">Choose the available ticket option or send the venue a ticket request.</p>${tickets.length ? `<div>${tickets.map((ticket) => ticketOption(ticket, event)).join("")}</div>${tickets.some((ticket) => !externalUrl(event, ticket) && ticket.status === "active") ? `<form class="js-ticket-order" data-event-slug="${escapeHtml(event.slug)}"><div class="field"><label>Name</label><input name="name" required autocomplete="name" /></div><div class="field"><label>Email</label><input name="email" type="email" required autocomplete="email" /></div><div class="field"><label>Phone</label><input name="phone" type="tel" autocomplete="tel" /></div>${tickets.some(t => t.deposit_percent > 0) ? `<div class="field"><label><input name="pay_deposit" type="checkbox" /> Pay the available deposit now; pay the remaining balance before entry.</label></div>` : ""}<p class="copy js-order-total" aria-live="polite"></p><button class="button button--primary" type="submit">Continue to Checkout</button><p class="form-status" role="status"></p></form>` : ""}` : mainExternal ? `<a class="button button--primary js-external-ticket" href="${safeUrl(mainExternal)}" target="_blank" rel="noreferrer">Get Tickets ${icon("external")}</a><p class="copy">Ticket checkout opens in a secure window.</p>` : `${ticketRequestForm(event)}`}</aside></div></section>`;
+  <aside class="ticket-panel"><h2>Tickets & Entry</h2><p class="copy">Choose the available ticket option or send the venue a ticket request.</p>${eventHasEnded(event) ? `<p class="copy">This event has ended. <a class="js-route" href="/events">View upcoming events</a>.</p>` : tickets.length ? `<div>${tickets.map((ticket) => ticketOption(ticket, event)).join("")}</div>${tickets.some((ticket) => !externalUrl(event, ticket) && ticket.status === "active") ? `<form class="js-ticket-order" data-event-slug="${escapeHtml(event.slug)}"><div class="field"><label>Name</label><input name="name" required autocomplete="name" /></div><div class="field"><label>Email</label><input name="email" type="email" required autocomplete="email" /></div><div class="field"><label>Phone</label><input name="phone" type="tel" autocomplete="tel" /></div>${tickets.some(t => t.deposit_percent > 0) ? `<div class="field"><label><input name="pay_deposit" type="checkbox" /> Pay the available deposit now; pay the remaining balance before entry.</label></div>` : ""}<p class="copy js-order-total" aria-live="polite"></p><button class="button button--primary" type="submit">Continue to Checkout</button><p class="form-status" role="status"></p></form>` : ""}` : mainExternal ? `<a class="button button--primary js-external-ticket" href="${safeUrl(mainExternal)}" target="_blank" rel="noreferrer">Get Tickets ${icon("external")}</a><p class="copy">Ticket checkout opens in a secure window.</p>` : `${ticketRequestForm(event)}`}</aside></div></section>`;
 }
 
 function values(form) {

@@ -66,14 +66,7 @@ export const FALLBACK_SITE = Object.freeze({
   settings: { toast_ready: true, toast_order_url: null, ticketing_mode: "hybrid", promo_proof_enabled: true }
 });
 
-export const FALLBACK_EVENTS = [
-  { name: "Emberline", slug: "hangar-18-emberline", description: "High-energy modern country and 90’s rock.", status: "live", starts_at: "2026-08-02T01:00:00Z", ends_at: "2026-08-02T04:00:00Z", hero_image_url: CONFIG.assets.interior, metadata: { public_slug: "emberline", price_label: "Free", ticketing_mode: "door" } },
-  { name: "Josh Holland", slug: "hangar-18-josh-holland-2", description: "A full night of live country music at Hangar 18.", status: "scheduled", starts_at: "2026-08-09T01:00:00Z", ends_at: "2026-08-09T04:00:00Z", hero_image_url: CONFIG.assets.josh, metadata: { public_slug: "josh-holland-2", price_label: "$10–$200", special_guest: "Matt Poss", tickets_remaining: 86, ticketing_mode: "external" } },
-  { name: "Fuedin’ Hillbillys", slug: "hangar-18-fuedin-hillbillys", description: "Live music under the lights at Hangar 18.", status: "scheduled", starts_at: "2026-08-15T02:00:00Z", ends_at: "2026-08-15T05:00:00Z", hero_image_url: CONFIG.assets.exterior, metadata: { public_slug: "fuedin-hillbillys", price_label: "$15–$35" } },
-  { name: "Identity Crisis", slug: "hangar-18-identity-crisis", description: "Live music at Hangar 18.", status: "scheduled", starts_at: "2026-08-16T02:00:00Z", ends_at: "2026-08-16T05:00:00Z", hero_image_url: CONFIG.assets.interior, metadata: { public_slug: "identity-crisis", price_label: "$5" } },
-  { name: "1973 — A Tribute to Journey", slug: "hangar-18-1973-a-tribute-to-journey-2", description: "A tribute to Journey live at Hangar 18.", status: "scheduled", starts_at: "2026-08-23T01:00:00Z", ends_at: "2026-08-23T04:00:00Z", hero_image_url: CONFIG.assets.exterior, metadata: { public_slug: "1973-a-tribute-to-journey-2", price_label: "$15–$250", tickets_remaining: 80 } },
-  { name: "The Wandering Horses", slug: "hangar-18-the-wandering-horses", description: "An evening of live music featuring The Wandering Horses.", status: "scheduled", starts_at: "2026-08-29T23:30:00Z", ends_at: "2026-08-30T04:00:00Z", hero_image_url: CONFIG.assets.exterior, metadata: { public_slug: "the-wandering-horses", special_guest: "Absent Ground • 6:30–8:00 PM", ticketing_mode: "door" } }
-];
+export const FALLBACK_EVENTS = [];
 
 export const MENU = [
   { category: "Specialty Pizzas", items: [

@@ -28,7 +28,7 @@ function feature(iconName, title, copy) {
   return `<article class="feature-card"><div class="feature-card__icon">${icon(iconName)}</div><h3>${escapeHtml(title)}</h3><p>${escapeHtml(copy)}</p></article>`;
 }
 
-export function homePage(site, events) {
+export function homePage(site, events, unavailable = false) {
   const order = orderUrl(site);
   const upcoming = events.slice(0, 3);
   return `<section class="hero" style="--hero-image:url('${CONFIG.assets.hero}')"><div class="container hero__inner"><div class="hero__copy">
@@ -44,7 +44,7 @@ export function homePage(site, events) {
 
   <section class="section"><div class="container split"><div class="split__media"><img src="${CONFIG.assets.exterior}" alt="Hangar 18 outdoor venue" loading="lazy" /></div><div class="split__copy"><p class="eyebrow">WELCOME TO WINDSOR</p><h2 class="h2">${escapeHtml(site.content?.about_title || "Welcome to Hangar 18")}</h2><p>${escapeHtml(site.content?.about_copy || "Hangar 18 blends a hometown atmosphere with handcrafted brews, crowd-pleasing food, and live entertainment.")}</p><div class="stat-row"><div class="stat"><strong>Food</strong><span>Lunch & dinner</span></div><div class="stat"><strong>Brews</strong><span>House & guest taps</span></div><div class="stat"><strong>Shows</strong><span>Indoor & outdoor</span></div></div>${routeLink("/about-us", `Our Story ${icon("arrow")}`, "button button--ghost")}</div></div></section>
 
-  <section class="section section--warm"><div class="container">${sectionHeading("UPCOMING AT THE HANGAR", "Pick the next night out.", "The event calendar stays connected to the venue’s management system, so dates, details, tickets, and promotional links can be updated from one place.", routeLink("/events", "Full Calendar", "button button--ghost"))}${upcoming.length ? `<div class="event-grid">${upcoming.map(eventCard).join("")}</div>` : `<div class="empty-box">New events are being loaded. Check back shortly.</div>`}</div></section>
+  <section class="section section--warm"><div class="container">${sectionHeading("UPCOMING AT THE HANGAR", "Pick the next night out.", "The event calendar stays connected to the venue’s management system, so dates, details, tickets, and promotional links can be updated from one place.", routeLink("/events", "Full Calendar", "button button--ghost"))}${upcoming.length ? `<div class="event-grid">${upcoming.map(eventCard).join("")}</div>` : `<div class="empty-box">${unavailable ? "The event calendar is temporarily unavailable. Please try again shortly." : "No upcoming events have been announced. Check back for the next show."}</div>`}</div></section>
 
   <section class="section"><div class="container split split--reverse"><div class="split__media"><img src="${CONFIG.assets.pizza}" alt="Hangar 18 specialty pizza" loading="lazy" /></div><div class="split__copy"><p class="eyebrow">COME HUNGRY</p><h2 class="h2">Food built to carry the whole night.</h2><p>Make Hangar 18 the dinner plan, not just the stop after dinner. Specialty pizzas, wings, shareables, sandwiches, and baskets are designed for tables that want to stay awhile.</p><div class="button-row">${routeLink("/menu", `Explore the Menu ${icon("arrow")}`, "button button--primary")}${order ? `<a class="button button--ghost js-track-order" href="${safeUrl(order)}" target="_blank" rel="noreferrer">Order Online</a>` : ""}</div></div></div></section>
 
@@ -72,9 +72,9 @@ export function beerPage() {
   <section class="section section--warm"><div class="container split"><div class="split__media"><img src="${CONFIG.assets.beerAlt}" alt="Beer at Hangar 18" loading="lazy" /></div><div class="split__copy"><p class="eyebrow">TRY A FLIGHT</p><h2 class="h2">Find the one that earns a full pour.</h2><p>Flights make it easy to compare crisp, hoppy, malty, and seasonal options. Pair one with a specialty pizza, then stay for the show.</p><div class="button-row">${routeLink("/menu", "See the Food Menu", "button button--primary")}${routeLink("/events", "Plan the Next Night", "button button--ghost")}</div></div></div></section>`;
 }
 
-export function eventsPage(events) {
+export function eventsPage(events, unavailable = false) {
   return `${pageHero({ eyebrow: "LIVE MUSIC • TICKETS • GOOD NIGHTS", title: "The Hangar 18 event calendar.", copy: "Find the show, open the full event page, buy or request tickets, and share the details with your crew.", image: CONFIG.assets.interior, actions: routeLink("/private-events", `${icon("users")} Host Your Event`, "button button--primary") })}
-  <section class="section"><div class="container">${events.length ? `<div class="event-grid">${events.map(eventCard).join("")}</div>` : `<div class="empty-box">The next round of events is being scheduled.</div>`}</div></section>`;
+  <section class="section"><div class="container">${events.length ? `<div class="event-grid">${events.map(eventCard).join("")}</div>` : `<div class="empty-box">${unavailable ? "The event calendar is temporarily unavailable. Please try again shortly." : "No upcoming events have been announced. Check back for the next show."}</div>`}</div></section>`;
 }
 
 function formHtml(type, title, intro, fields, submitLabel) {

@@ -1,12 +1,13 @@
+import { upcomingEvents } from "./event-data.js";
 import { ticketPage } from "./ticketing.js";
-import { CONFIG, FALLBACK_EVENTS, FALLBACK_SITE } from "./config.js";
+import { CONFIG, FALLBACK_SITE } from "./config.js";
 import { bootAdmin } from "./admin-ui.js";
 import { eventPage, wireEventPage } from "./event-page.js";
 import { aboutPage, beerPage, contactPage, eventsPage, homePage, jobsPage, menuPage, notFoundPage, privateEventsPage } from "./pages.js";
 import { publicBundle, publicEvent, submitForm, track } from "./supabase.js";
 import { appRoot, escapeHtml, navigate, publicEventSlug, publicShell, showToast, wireShell } from "./ui.js";
 
-let bundle = { site: FALLBACK_SITE, events: FALLBACK_EVENTS };
+let bundle = { site: FALLBACK_SITE, events: [], eventsUnavailable: false };
 let trackedPath = "";
 
 function titleFor(path) {
@@ -32,19 +33,22 @@ function cleanPath() {
 async function loadBundle() {
   try {
     const result = await publicBundle();
-    if (result?.site) bundle = { site: { ...FALLBACK_SITE, ...result.site }, events: Array.isArray(result.events) && result.events.length ? result.events : FALLBACK_EVENTS };
+    if (!result?.site || !Array.isArray(result.events)) throw new Error("Invalid venue event response");
+    bundle = { site: { ...FALLBACK_SITE, ...result.site }, events: upcomingEvents(result.events), eventsUnavailable: false };
   } catch (error) {
-    console.warn("Live venue data unavailable; using the cached Hangar 18 experience.", error);
+    bundle.events = [];
+    bundle.eventsUnavailable = true;
+    console.warn("Live venue events unavailable.", error);
   }
 }
 
 function pageFor(path) {
   const site = bundle.site;
-  if (path === "/") return homePage(site, bundle.events);
+  if (path === "/") return homePage(site, bundle.events, bundle.eventsUnavailable);
   if (path === "/about-us") return aboutPage(site);
   if (path === "/menu") return menuPage(site);
   if (path === "/beer") return beerPage(site);
-  if (path === "/events") return eventsPage(bundle.events);
+  if (path === "/events") return eventsPage(bundle.events, bundle.eventsUnavailable);
   if (path === "/private-events") return privateEventsPage(site);
   if (path === "/jobs") return jobsPage(site);
   if (path === "/contact") return contactPage(site);
