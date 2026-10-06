@@ -287,7 +287,7 @@ function wireAdmin() {
 
 export async function bootAdmin() {
   document.body.classList.add("admin-body");
-  appRoot.innerHTML = `<main class="boot-screen"><img src="${CONFIG.assets.logo}" alt="Hangar 18" /><div class="boot-spinner"></div><p>Opening management portal…</p></main>`;
+  appRoot.innerHTML = `<main class="boot-screen"><img src="${CONFIG.assets.loadingLogo}" alt="Hangar 18" /><div class="boot-spinner"></div><p>Opening management portal…</p></main>`;
   try {
     const auth = await currentUser(state.session);
     if (!auth) { loginView(); return; }

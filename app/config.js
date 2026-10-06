@@ -13,6 +13,7 @@ export const CONFIG = Object.freeze({
     ["/contact", "Contact"]
   ],
   assets: {
+    loadingLogo: "/favicon.png?v=20261006-logo18",
     logo: "https://hangar18pub.com/wp-content/uploads/2023/06/HANGAR-18-redraw-2.png",
     hero: "https://xopcttkrmjvwdddawdaa.supabase.co/storage/v1/object/public/venue-assets/hangar18/outdoor-venue.webp",
     exterior: "https://xopcttkrmjvwdddawdaa.supabase.co/storage/v1/object/public/venue-assets/hangar18/outdoor-venue.webp",

@@ -127,6 +127,6 @@ document.addEventListener("click", (event) => {
   try { await loadBundle(); await render(); }
   catch (error) {
     console.error(error);
-    appRoot.innerHTML = `<main class="boot-screen"><img src="${CONFIG.assets.logo}" alt="Hangar 18" /><h1 class="h2">The hangar needs a quick reset.</h1><p>${escapeHtml(error.message || "Refresh the page to try again.")}</p><button class="button button--primary" onclick="location.reload()">Refresh</button></main>`;
+    appRoot.innerHTML = `<main class="boot-screen"><img src="${CONFIG.assets.loadingLogo}" alt="Hangar 18" /><h1 class="h2">The hangar needs a quick reset.</h1><p>${escapeHtml(error.message || "Refresh the page to try again.")}</p><button class="button button--primary" onclick="location.reload()">Refresh</button></main>`;
   }
 })();
