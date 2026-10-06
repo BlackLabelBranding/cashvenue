@@ -8,6 +8,10 @@
       "destination": "/admin/index.html"
     },
     {
+      "source": "/ticket",
+      "destination": "/ticket/index.html"
+    },
+    {
       "source": "/event/:slug",
       "destination": "/event/index.html"
     },
@@ -46,7 +50,7 @@
         },
         {
           "key": "Permissions-Policy",
-          "value": "camera=(), microphone=(), geolocation=(self)"
+          "value": "camera=(self), microphone=(), geolocation=(self)"
         },
         {
           "key": "Content-Security-Policy",

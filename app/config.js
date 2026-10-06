@@ -13,15 +13,15 @@ export const CONFIG = Object.freeze({
     ["/contact", "Contact"]
   ],
   assets: {
-    logo: "/assets/logo.png",
-    hero: "/assets/hero.jpg",
-    exterior: "/assets/hero.jpg",
-    pizza: "/assets/pizza.jpg",
-    interior: "/assets/venue.jpg",
-    beer: "/assets/venue.jpg",
-    beerAlt: "/assets/hero.jpg",
-    bella: "/assets/bella.png",
-    josh: "/assets/josh-holland.png"
+    logo: "https://hangar18pub.com/wp-content/uploads/2023/06/HANGAR-18-redraw-2.png",
+    hero: "https://xopcttkrmjvwdddawdaa.supabase.co/storage/v1/object/public/venue-assets/hangar18/outdoor-venue.webp",
+    exterior: "https://xopcttkrmjvwdddawdaa.supabase.co/storage/v1/object/public/venue-assets/hangar18/outdoor-venue.webp",
+    pizza: "https://xopcttkrmjvwdddawdaa.supabase.co/storage/v1/object/public/venue-assets/hangar18/outdoor-venue.webp",
+    interior: "https://xopcttkrmjvwdddawdaa.supabase.co/storage/v1/object/public/venue-assets/hangar18/outdoor-venue.webp",
+    beer: "https://xopcttkrmjvwdddawdaa.supabase.co/storage/v1/object/public/venue-assets/hangar18/outdoor-venue.webp",
+    beerAlt: "https://xopcttkrmjvwdddawdaa.supabase.co/storage/v1/object/public/venue-assets/hangar18/outdoor-venue.webp",
+    bella: "https://xopcttkrmjvwdddawdaa.supabase.co/storage/v1/object/public/venue-assets/hangar18/outdoor-venue.webp",
+    josh: "https://xopcttkrmjvwdddawdaa.supabase.co/storage/v1/object/public/venue-assets/hangar18/outdoor-venue.webp"
   }
 });
 
