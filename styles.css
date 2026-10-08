@@ -515,3 +515,13 @@ button { cursor: pointer; }
 .ticket-panel .js-order-total { font-weight:700; }
 .quantity:disabled { opacity:.55; cursor:not-allowed; }
 @media print { .site-header, .topbar, .footer, .mobile-actions, .button-row, .js-print-ticket { display:none!important; } }
+
+/* Keep long hero copy and the logo card within narrow screens. */
+.hero { overflow: hidden; }
+@media (max-width: 820px) {
+  .split__media::after { right: 0; }
+  .hero__backdrop { transform: none; }
+  .hero__grid { grid-template-columns: minmax(0, 1fr); }
+  .hero__copy, .hero__brand-card { min-width: 0; max-width: 100%; }
+  .hero__copy .display { overflow-wrap: anywhere; }
+}
