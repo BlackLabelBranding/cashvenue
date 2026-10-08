@@ -1,64 +1,13 @@
-# CASH Music Venue Database
-The goal of this project is to create an open data portal for music venue information. This means
-we'll serve human and machine readable information free for all to use and distribute. All data 
-will be available under a Creative Commons CC0 declaration, making it public domain.
+# Truckers Pub venue site
 
-To start, we'll offer HTML and JSON endpoints for search and detailed venue data.
+Production: https://truckers-pub-inc.vercel.app/
+Management: https://truckers-pub-inc.vercel.app/admin
+Payment setup: https://truckers-pub-inc.vercel.app/admin?payments=return
 
-This simple interface will allow other services to leverage open venue data in their own applications,
-starting with the CASH Music platform. 
+This static site uses the existing Black Label shared ticketing backend, with site key `truckerspub` and venue ID `aafc14e8-eb04-4824-88a5-a3be25add2bf`. Events, ticket inventory, checkout, deposits, balances, refunds, check-in, and payment reporting are scoped to that venue. Stripe onboarding creates an independent connected account; payment credentials remain in the backend.
 
+Truckers Pub's content, branding, assets, artist directory, and inquiry management are retained. Public listings include only scheduled/live event campaigns that have not ended. Empty results are authoritative; service failures show an unavailable message. Promotional campaign destinations are not checkout URLs.
 
-## Routes
-We'll use a simple URL scheme:
+Deploy the root as a static Vercel project with `vercel.json`. No build command is required. Keep the payment-account website origin aligned with the live URL for CORS, Stripe return URLs, and private ticket links. Online sales require completed Stripe onboarding and explicit activation in Payments & Deposits. Configure the shared backend email service before relying on automatic ticket emails.
 
-Search endpoint:
-/venues/term (JSON)
-/venues/term.html (HTML)
-
-Detail data endpoint:
-/venue/identifier (JSON)
-/venue/identifier.html (HTML)
-
-
-## Data format
-Search results:
-```JSON
-[
-	{
-		"UUID":"04ft9",
-		"name":"The Echo",
-		"city":"Los Angeles",
-		"country":"USA"
-	},
-	{
-		"UUID":"316y8",
-		"name":"Echoplex",
-		"city":"Los Angeles",
-		"country":"USA"
-	}
-]
-```
-
-Venue data:
-```JSON
-{
-	"UUID":"04ft9",
-	"name":"The Echo",
-	"type":"venue",
-	"address1":"1822 Sunset Blvd",
-	"address2":"",
-	"city":"Los Angeles",
-	"region":"California",
-	"country":"USA",
-	"postalcode":"90026",
-	"latitude":34.077729,
-	"longitude":-118.260108,
-	"url":"http://www.theecho.com/",
-	"phone":"(213) 413-8200",
-	"email":"",
-	"capacity":350,
-	"creation_date":1427481092,
-	"modification_date":1427483107
-}
-```
+Verification: browser checks cover public campaign filtering, reserved/sold inventory, sold-out controls, deposit totals, venue-scoped checkout and onboarding, private balance links, login restoration, deposit configuration, scanner controls, and service outage feedback. Financial requests are intercepted during automated checks; no live sale, refund, or Stripe onboarding was initiated for verification.

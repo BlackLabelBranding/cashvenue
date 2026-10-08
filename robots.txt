@@ -1,4 +1,5 @@
 User-agent: *
 Allow: /
 Disallow: /admin
-Sitemap: https://h18brewing.com/sitemap.xml
+Sitemap: https://truckerspubinc.com/sitemap.xml
+

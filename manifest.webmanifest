@@ -1,23 +1,13 @@
 {
-  "name": "Hangar 18",
-  "short_name": "Hangar 18",
-  "description": "Craft brews, bold food, live music, events, and tickets in Windsor, Illinois.",
+  "name": "Truckers Pub Inc.",
+  "short_name": "Truckers Pub",
+  "description": "Drinks, games, live entertainment, and monthly events in Effingham, Illinois.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#080808",
-  "theme_color": "#b51018",
+  "background_color": "#070a10",
+  "theme_color": "#d7192d",
   "icons": [
-    {
-      "src": "/favicon.svg?v=20261006-logo18",
-      "sizes": "any",
-      "type": "image/svg+xml",
-      "purpose": "any"
-    },
-    {
-      "src": "/apple-touch-icon.png?v=20261006-logo18",
-      "sizes": "253x193",
-      "type": "image/png",
-      "purpose": "any"
-    }
+    { "src": "/assets/logo.jpg", "sizes": "480x480", "type": "image/jpeg", "purpose": "any" }
   ]
 }
+

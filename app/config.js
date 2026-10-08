@@ -1,117 +1,89 @@
 export const CONFIG = Object.freeze({
-  siteKey: "hangar18",
+  siteKey: "truckerspub",
   supabaseUrl: "https://xopcttkrmjvwdddawdaa.supabase.co",
   supabaseAnonKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhvcGN0dGtybWp2d2RkZGF3ZGFhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYxNTQzNjgsImV4cCI6MjA3MTczMDM2OH0.5s1HHvDsDIgWw6TVR3YfhzJC9uEjcVfunRyMa6B7xYY",
   routes: [
     ["/", "Home"],
-    ["/about-us", "About"],
-    ["/menu", "Menu"],
-    ["/beer", "Beer"],
+    ["/about", "About"],
     ["/events", "Events"],
-    ["/private-events", "Private Events"],
-    ["/jobs", "Jobs"],
+    ["/happy-hour", "Happy Hour"],
+    ["/gallery", "Gallery"],
+    ["/faq", "FAQ"],
     ["/contact", "Contact"]
   ],
   assets: {
-    loadingLogo: "/favicon.png?v=20261006-logo18",
-    logo: "https://hangar18pub.com/wp-content/uploads/2023/06/HANGAR-18-redraw-2.png",
-    hero: "https://xopcttkrmjvwdddawdaa.supabase.co/storage/v1/object/public/venue-assets/hangar18/outdoor-venue.webp",
-    exterior: "https://xopcttkrmjvwdddawdaa.supabase.co/storage/v1/object/public/venue-assets/hangar18/outdoor-venue.webp",
-    pizza: "https://xopcttkrmjvwdddawdaa.supabase.co/storage/v1/object/public/venue-assets/hangar18/outdoor-venue.webp",
-    interior: "https://xopcttkrmjvwdddawdaa.supabase.co/storage/v1/object/public/venue-assets/hangar18/outdoor-venue.webp",
-    beer: "https://xopcttkrmjvwdddawdaa.supabase.co/storage/v1/object/public/venue-assets/hangar18/outdoor-venue.webp",
-    beerAlt: "https://xopcttkrmjvwdddawdaa.supabase.co/storage/v1/object/public/venue-assets/hangar18/outdoor-venue.webp",
-    bella: "https://xopcttkrmjvwdddawdaa.supabase.co/storage/v1/object/public/venue-assets/hangar18/outdoor-venue.webp",
-    josh: "https://xopcttkrmjvwdddawdaa.supabase.co/storage/v1/object/public/venue-assets/hangar18/outdoor-venue.webp"
+    logo: "/assets/logo.jpg",
+    brandPhoto: "/assets/truckers-pub-inc.jpg",
+    logoVideo: "/assets/logo-animation.mp4",
+    logoPoster: "/assets/logo-poster.jpg",
+    hero: "/assets/bar.png",
+    about: "/assets/games.png",
+    events: "/assets/special-events.png",
+    bar: "/assets/bar.png",
+    games: "/assets/games.png",
+    happyHour: "/assets/happy-hour.webp",
+    legacyHero: "/assets/current-main.png"
   }
 });
 
 export const FALLBACK_SITE = Object.freeze({
-  site_key: "hangar18",
-  display_name: "Hangar 18",
-  domain: "h18brewing.com",
+  site_key: "truckerspub",
+  display_name: "Truckers Pub Inc.",
+  domain: "truckerspubinc.com",
   status: "preview",
-  order_provider: "chownow",
-  order_url: "https://order.chownow.com/order/24977/locations/36908",
-  fallback_order_url: "https://order.chownow.com/order/24977/locations/36908",
-  contact_email: "management@hangar18.org",
-  contact_phone: "(217) 500-1965",
-  address_line1: "1112 Maine St",
-  city: "Windsor",
+  order_provider: "none",
+  order_url: null,
+  fallback_order_url: null,
+  contact_email: "truckerspubinc@gmail.com",
+  contact_phone: "(217) 994-9294",
+  address_line1: "1707 Avenue of Mid-America Suite C",
+  city: "Effingham",
   state: "IL",
-  postal_code: "61957",
+  postal_code: "62401",
   timezone: "America/Chicago",
   hours: {
-    monday: { kitchen: "11:00 AM–9:00 PM", bar: "11:00 AM–9:00 PM" },
-    tuesday: { closed: true },
-    wednesday: { kitchen: "11:00 AM–9:00 PM", bar: "11:00 AM–9:00 PM" },
-    thursday: { kitchen: "11:00 AM–9:00 PM", bar: "11:00 AM–9:00 PM" },
-    friday: { kitchen: "11:00 AM–9:00 PM", bar: "11:00 AM–11:00 PM" },
-    saturday: { kitchen: "11:00 AM–9:00 PM", bar: "11:00 AM–11:00 PM" },
-    sunday: { kitchen: "12:00 PM–8:00 PM", bar: "12:00 PM–8:00 PM" }
+    monday: { bar: "11:00 AM–1:00 AM" },
+    tuesday: { bar: "11:00 AM–1:00 AM" },
+    wednesday: { bar: "11:00 AM–1:00 AM" },
+    thursday: { bar: "11:00 AM–1:00 AM" },
+    friday: { bar: "11:00 AM–1:00 AM" },
+    saturday: { bar: "11:00 AM–1:00 AM" },
+    sunday: { bar: "11:00 AM–1:00 AM" }
   },
   social_links: {
-    facebook: "https://www.facebook.com/hangar18.il",
-    instagram: "https://www.instagram.com/hangar_18_brewery/",
-    tiktok: "https://www.tiktok.com/@hangar.18.brewery"
+    facebook: "",
+    instagram: "",
+    tiktok: ""
   },
-  brand: { primary: "#b51018", secondary: "#fff23c", ink: "#080808" },
+  brand: { primary: "#d7192d", secondary: "#174f91", ink: "#070a10" },
   content: {
-    hero_eyebrow: "CRAFT BREWS • BOLD FOOD • LIVE MUSIC",
-    hero_title: "Where great times take flight.",
-    hero_copy: "Craft beer, loaded pizzas, live entertainment, and a one-of-a-kind outdoor venue in Windsor, Illinois.",
-    about_title: "Welcome to Hangar 18",
-    about_copy: "Hangar 18 blends a laid-back hometown atmosphere with handcrafted brews, crowd-pleasing food, and live entertainment. Come for dinner, stay for the show, and make a night of it.",
-    private_events_copy: "Bring your celebration, fundraiser, company gathering, or private party to Hangar 18. Tell us what you are planning and our team will help you build it."
+    hero_eyebrow: "DRINKS • GAMES • LIVE ENTERTAINMENT",
+    hero_title: "Your off-duty destination.",
+    hero_copy: "Full bar, 15 draft beers, pool, darts, video gaming, and a laid-back Effingham atmosphere that feels like your regular stop from the first visit.",
+    about_title: "Built for good drinks and better nights.",
+    about_copy: "Truckers Pub Inc. has been a favorite neighborhood bar in Effingham, Illinois, since 2013. We welcome locals, travelers, and truck drivers with friendly service, a full bar, packaged liquor, games, and entertainment.",
+    private_events_copy: "Planning a tournament, celebration, fundraiser, or live event? Send the details and our management team will follow up."
   },
-  settings: { toast_ready: true, toast_order_url: null, ticketing_mode: "hybrid", promo_proof_enabled: true }
+  settings: { ticketing_mode: "hybrid", promo_proof_enabled: true }
 });
 
+// Public events come from the shared venue database. Empty fallbacks avoid publishing
+// dates or performers that management has not approved.
 export const FALLBACK_EVENTS = [];
 
-export const MENU = [
-  { category: "Specialty Pizzas", items: [
-    ["Three Little Pigs", "Pepperoni, sausage, bacon, mozzarella, and house red sauce.", "$18"],
-    ["Meat Hangar", "Pepperoni, sausage, bacon, ham, beef, mozzarella, and red sauce.", "$20"],
-    ["Buffalo Chicken", "Chicken, buffalo sauce, ranch, mozzarella, and green onion.", "$18"],
-    ["BBQ Chicken", "Chicken, barbecue sauce, red onion, bacon, and mozzarella.", "$18"],
-    ["Supreme", "Pepperoni, sausage, mushroom, onion, green pepper, olive, and mozzarella.", "$19"],
-    ["Build Your Own", "Start with cheese and add your favorite meats and vegetables.", "From $14"]
-  ]},
-  { category: "Wings & Shareables", items: [
-    ["Traditional Wings", "Crispy wings tossed in your choice of sauce.", "$12"],
-    ["Boneless Wings", "Hand-breaded chicken with your choice of sauce.", "$11"],
-    ["Loaded Nachos", "Tortilla chips, queso, meat, vegetables, and house toppings.", "$13"],
-    ["Pretzel Bites", "Warm pretzel bites with beer cheese.", "$9"],
-    ["Mozzarella Sticks", "Breaded mozzarella with marinara.", "$9"],
-    ["Fried Pickles", "Crispy pickle chips with ranch.", "$8"]
-  ]},
-  { category: "Sandwiches & Baskets", items: [
-    ["Hangar Burger", "Seasoned beef, cheese, lettuce, tomato, onion, and house sauce.", "$13"],
-    ["Chicken Bacon Ranch", "Chicken, bacon, ranch, lettuce, tomato, and cheese.", "$13"],
-    ["Pulled Pork", "Slow-cooked pork, barbecue sauce, and slaw.", "$12"],
-    ["Chicken Strip Basket", "Crispy chicken strips with fries and dipping sauce.", "$12"],
-    ["Fish Basket", "Golden fish, fries, slaw, and tartar sauce.", "$13"]
-  ]},
-  { category: "Salads & Lighter Fare", items: [
-    ["House Salad", "Greens, tomato, cucumber, onion, cheese, and croutons.", "$9"],
-    ["Chicken Salad", "House salad topped with grilled or crispy chicken.", "$13"],
-    ["Caesar Salad", "Romaine, parmesan, croutons, and Caesar dressing.", "$10"]
-  ]}
+export const HIGHLIGHTS = [
+  ["beer", "Full Bar & 15 Drafts", "Cold drafts, cocktails, packaged liquor, and plenty of choices for the whole crew."],
+  ["target", "Pool & Darts", "Rack a game, throw a round, or watch for tournaments and monthly competitions."],
+  ["game", "Video Gaming", "Settle in, play, and enjoy a relaxed neighborhood-bar atmosphere."],
+  ["calendar", "Special Events", "Live entertainment, themed nights, tournaments, and venue events managed in one calendar."]
 ];
 
-export const BEERS = [
-  ["Hangar Lager", "Crisp, clean, and built for a long night at the bar.", "4.7%", "Lager"],
-  ["Citra Flight", "Bright citrus aroma, soft bitterness, and a clean finish.", "6.2%", "IPA"],
-  ["Runway Amber", "Caramel malt, toasted bread, and a smooth finish.", "5.4%", "Amber Ale"],
-  ["Night Mission", "Roasted malt, cocoa, and coffee character.", "6.0%", "Stout"],
-  ["Radar Wheat", "Light-bodied wheat beer with a fresh citrus lift.", "5.0%", "Wheat"],
-  ["Seasonal Rotation", "Ask the bar what just landed on tap.", "Varies", "Limited"]
+export const FAQS = [
+  ["What are your hours?", "Truckers Pub is open every day from 11:00 AM to 1:00 AM. Holiday hours may vary, so call ahead for details."],
+  ["Do you have pool tables and darts?", "Yes. Truckers Pub has pool tables and dart boards, with tournaments and special game nights announced through the event calendar."],
+  ["Do you offer packaged liquor?", "Yes. In addition to the full bar, Truckers Pub offers a selection of packaged liquor. Call for current availability."],
+  ["Where are you located?", "We are at 1707 Avenue of Mid-America, Suite C, in Effingham, Illinois—convenient for locals and travelers."],
+  ["Can I host an event or tournament?", "Use the contact form with your date, group size, and event idea. Management will follow up about availability and options."],
+  ["Do holiday hours change?", "They may. Call (217) 994-9294 for the most current holiday schedule."]
 ];
 
-export const JOBS = [
-  ["Bartender", "Fast, accurate service; responsible alcohol service; strong guest connection."],
-  ["Server", "Own the table, communicate clearly, and keep the room moving."],
-  ["Kitchen Crew", "Consistent prep, clean execution, and calm performance under pressure."],
-  ["Event & Door Crew", "Guest check-in, ticket scanning, crowd flow, and event support."]
-];

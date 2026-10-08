@@ -152,7 +152,7 @@ function updateNavBadge() {
     badge.setAttribute("aria-label", `${count} unread inquiries`);
   }
   if (location.pathname === "/admin") {
-    const base = "Hangar 18 Management";
+    const base = "Truckers Pub Management";
     document.title = count ? `(${count}) ${base}` : base;
   }
 }
@@ -384,3 +384,4 @@ window.addEventListener("pageshow", queueEnhance);
 window.addEventListener("popstate", queueEnhance);
 document.addEventListener("keydown", (event) => { if (event.key === "Escape") closeModal(); });
 queueEnhance();
+

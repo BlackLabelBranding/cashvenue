@@ -1,3 +1,4 @@
+import { updateCampaign } from "./supabase.js";
 import { CONFIG } from "./config.js";
 import { loadAdminData, readSession, rpc } from "./supabase.js";
 import { escapeHtml, showToast } from "./ui.js";
@@ -188,6 +189,7 @@ function formMarkup(context, artists) {
         <div class="admin-form-grid">
           <div class="field"><label>Event name</label><input name="name" data-event-name required /></div>
           <div class="field"><label>Status</label><select name="status"><option value="draft">Draft</option><option value="scheduled">Published / Scheduled</option><option value="live">Live now</option></select></div>
+          <div class="field"><label>Total guest capacity (optional)</label><input name="ticket_capacity" type="number" min="0" step="1" /></div>
           <div class="field"><label>Starts</label><input name="starts_at" type="datetime-local" required /></div>
           <div class="field"><label>Ends</label><input name="ends_at" type="datetime-local" /></div>
           <div class="field field--wide"><label>Description</label><textarea name="description" data-event-description rows="4"></textarea></div>
@@ -403,7 +405,7 @@ async function submitEnhancedEvent(form) {
       p_event_name: eventName,
       p_slug: `${safeFileName(context.site?.site_key || "venue")}-${publicSlug}-${Math.random().toString(36).slice(2, 6)}`,
       p_description: String(values.description || "").trim() || null,
-      p_status: String(values.status || "draft"),
+      p_status: values.ticket_capacity ? "draft" : String(values.status || "draft"),
       p_starts_at: new Date(values.starts_at).toISOString(),
       p_ends_at: values.ends_at ? new Date(values.ends_at).toISOString() : null,
       p_event_image_url: eventImageUrl,
@@ -424,6 +426,15 @@ async function submitEnhancedEvent(form) {
       p_billing_role: "headliner"
     }, token);
 
+    if (values.ticket_capacity && result?.campaign?.id) {
+      try {
+        await updateCampaign(token, result.campaign.id, { ticket_capacity: Number(values.ticket_capacity), status: String(values.status || "draft"), published_at: ["scheduled","live"].includes(values.status) ? new Date().toISOString() : null });
+      } catch (error) {
+        status.textContent = "Event saved as a draft. Guest capacity could not be saved; refresh before publishing. " + error.message;
+        status.className = "artist-builder__status is-error";
+        return;
+      }
+    }
     const createdArtist = result?.artist;
     status.className = "artist-builder__status is-success";
     status.textContent = createdArtist?.name
@@ -544,3 +555,4 @@ observer.observe(document.documentElement, { childList: true, subtree: true });
 window.addEventListener("pageshow", queueEnhance);
 window.addEventListener("popstate", queueEnhance);
 queueEnhance();
+

@@ -7,7 +7,7 @@ export function eventHasEnded(event, now = Date.now()) {
 
 export function upcomingEvents(events, now = Date.now()) {
   return (Array.isArray(events) ? events : [])
-    .filter(event => ["scheduled", "live"].includes(event.status) && Number.isFinite(Date.parse(event.starts_at)) && !eventHasEnded(event, now))
+    .filter(event => event.campaign_type === "event" && ["scheduled", "live"].includes(event.status) && Number.isFinite(Date.parse(event.starts_at)) && !eventHasEnded(event, now))
     .sort((a, b) => Date.parse(a.starts_at) - Date.parse(b.starts_at));
 }
 
@@ -18,7 +18,7 @@ export function externalTicketUrl(event, ticket, origin) {
   try {
     const url = new URL(candidate);
     if (url.protocol !== "https:" || url.origin === origin) return "";
-    const legacyVenue = ["h18brewing.com", "www.h18brewing.com"].includes(url.hostname);
+    const legacyVenue = ["truckerspubinc.com", "www.truckerspubinc.com"].includes(url.hostname);
     if (legacyVenue) return "";
     return url.href;
   } catch { return ""; }

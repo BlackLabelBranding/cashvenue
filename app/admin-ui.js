@@ -63,7 +63,7 @@ function metric(label, value) {
 
 function loginView() {
   document.body.classList.add("admin-body");
-  appRoot.innerHTML = `<main class="admin-login" style="--hero-image:url('${CONFIG.assets.hero}')"><section class="admin-login__visual"><img src="${CONFIG.assets.logo}" alt="Hangar 18" /><h1>Hangar 18 Management</h1></section><section class="admin-login__form"><div class="admin-login__card"><p class="eyebrow">VENUE ACCESS</p><h2>Sign in to manage the hangar.</h2><p>Events, tickets, inquiries, website content, ordering links, staff promotion, and performance data.</p><form class="js-admin-login"><div class="stack">${field("Email", "email", "", { type: "email", required: true })}${field("Password", "password", "", { type: "password", required: true })}<button class="button button--primary" type="submit">${icon("login")} Sign In</button><button class="button button--ghost js-reset-password" type="button">Send Password Reset</button><a class="button button--ghost js-route" href="/">Return to Website</a><p class="form-status" role="status"></p></div></form></div></section></main>`;
+  appRoot.innerHTML = `<main class="admin-login" style="--hero-image:url('${CONFIG.assets.hero}')"><section class="admin-login__visual"><img src="${CONFIG.assets.logo}" alt="Truckers Pub" /><h1>Truckers Pub Management</h1></section><section class="admin-login__form"><div class="admin-login__card"><p class="eyebrow">VENUE ACCESS</p><h2>Sign in to manage the pub.</h2><p>Events, tickets, inquiries, website content, ordering links, staff promotion, and performance data.</p><form class="js-admin-login"><div class="stack">${field("Email", "email", "", { type: "email", required: true })}${field("Password", "password", "", { type: "password", required: true })}<button class="button button--primary" type="submit">${icon("login")} Sign In</button><button class="button button--ghost js-reset-password" type="button">Send Password Reset</button><a class="button button--ghost js-route" href="/">Return to Website</a><p class="form-status" role="status"></p></div></form></div></section></main>`;
 
   const form = document.querySelector(".js-admin-login");
   form.addEventListener("submit", async (event) => {
@@ -94,7 +94,7 @@ function dashboardView(data) {
   const views = data.trackingEvents.filter((item) => item.event_type === "landing_view" && new Date(item.occurred_at).getTime() >= thirtyDays).length;
   const verified = data.conversions.filter((item) => item.status === "verified" && new Date(item.occurred_at).getTime() >= thirtyDays);
   const revenue = verified.reduce((sum, item) => sum + Number(item.value_amount || 0), 0);
-  const liveEvents = data.campaigns.filter((item) => ["scheduled", "live"].includes(item.status));
+  const liveEvents = data.campaigns.filter((item) => item.campaign_type === "event" && ["scheduled", "live"].includes(item.status));
   const openInquiries = data.submissions.filter((item) => ["new", "in_progress"].includes(item.status));
   const upcoming = [...liveEvents].sort((a,b) => new Date(a.starts_at || 0) - new Date(b.starts_at || 0)).slice(0, 6);
   return `<div class="admin-metrics">${metric("Upcoming events", liveEvents.length)}${metric("Open inquiries", openInquiries.length)}${metric("Tracked clicks · 30d", clicks)}${metric("Verified revenue · 30d", money(revenue))}</div>
@@ -115,12 +115,12 @@ function websiteView(data) {
 
 function eventsView(data) {
   const newForm = `<form class="js-event-form"><div class="admin-form-grid">${field("Event name", "name", "", { required: true })}${field("Status", "status", "draft", { type: "select", choices: [["draft","Draft"],["scheduled","Published / Scheduled"],["live","Live now"]] })}${field("Total guest capacity (optional)", "ticket_capacity", "", { type: "number", min: 0 })}${field("Starts", "starts_at", "", { type: "datetime-local", required: true })}${field("Ends", "ends_at", "", { type: "datetime-local" })}${field("Hero image URL", "hero_image_url", "", { type: "url", wide: true })}${field("Description", "description", "", { type: "textarea", wide: true })}${field("Price label", "price_label", "")}${field("Special guest", "special_guest", "")}${field("Ticketing mode", "ticketing_mode", "native", { type: "select", choices: [["native","Native tickets"],["external","External ticket link"],["door","Pay / enter at door"]] })}${field("External ticket URL", "external_ticket_url", "", { type: "url" })}${field("Approved promotional caption", "default_caption", "", { type: "textarea", wide: true })}</div><button class="button button--primary" type="submit">Create Event</button><p class="form-status" role="status"></p></form>`;
-  const rows = data.campaigns.map((event) => `<tr><td><strong>${escapeHtml(event.name)}</strong><br/><small>${escapeHtml(event.description || "")}</small></td><td>${escapeHtml(formatDate(event.starts_at))}</td><td>${badge(event.status)}</td><td><div class="admin-actions"><button class="button button--small button--ghost" data-event-status="${event.id}" data-status="scheduled">Publish</button><button class="button button--small button--ghost" data-event-status="${event.id}" data-status="live">Live</button><button class="button button--small button--ghost" data-event-status="${event.id}" data-status="archived">Archive</button><a class="button button--small button--ghost" href="/event/${escapeHtml(event.metadata?.public_slug || event.slug.replace(/^hangar-18-/, ""))}" target="_blank">View</a></div></td></tr>`).join("");
+  const rows = data.campaigns.filter(item => item.campaign_type === "event").map((event) => `<tr><td><strong>${escapeHtml(event.name)}</strong><br/><small>${escapeHtml(event.description || "")}</small></td><td>${escapeHtml(formatDate(event.starts_at))}</td><td>${badge(event.status)}</td><td><div class="admin-actions"><button class="button button--small button--ghost" data-event-status="${event.id}" data-status="scheduled">Publish</button><button class="button button--small button--ghost" data-event-status="${event.id}" data-status="live">Live</button><button class="button button--small button--ghost" data-event-status="${event.id}" data-status="archived">Archive</button><a class="button button--small button--ghost" href="/event/${escapeHtml(event.metadata?.public_slug || event.slug.replace(/^truckers-pub-/, ""))}" target="_blank">View</a></div></td></tr>`).join("");
   return `${panel("Create Event", newForm)}${panel("Event Library", rows ? `<div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>Event</th><th>Date</th><th>Status</th><th>Actions</th></tr></thead><tbody>${rows}</tbody></table></div>` : `<div class="empty-box">No events yet.</div>`)}`;
 }
 
 function ticketsView(data) {
-  const campaigns = data.campaigns.filter((item) => item.status !== "archived");
+  const campaigns = data.campaigns.filter((item) => item.campaign_type === "event" && item.status !== "archived");
   const newForm = `<form class="js-ticket-type-form"><div class="admin-form-grid">${field("Event", "campaign_id", "", { type: "select", choices: [["","Choose an event"], ...campaigns.map((item) => [item.id,item.name])] })}${field("Ticket name", "name", "General Admission", { required: true })}${field("Price", "price_amount", "0", { type: "number", step: ".01" })}${field("Display price", "price_label", "")}${field("Quantity available", "quantity_total", "", { type: "number", min: 0 })}${field("Maximum per order", "max_per_order", "10", { type: "number", min: 1 })}${field("Guests admitted per ticket / table", "guests_per_ticket", "1", { type: "number", min: 1 })}${field("Deposit percentage (0 = full payment)", "deposit_percent", "0", { type: "number", min: 0 })}${field("Remaining balance due", "balance_due_at", "", { type: "datetime-local" })}${field("External checkout URL", "external_purchase_url", "", { type: "url", wide: true })}${field("Description", "description", "", { type: "textarea", wide: true })}</div><button class="button button--primary" type="submit">Create Ticket Type</button><p class="form-status" role="status"></p></form>`;
   const campaignById = Object.fromEntries(data.campaigns.map((item) => [item.id,item]));
   const rows = data.ticketTypes.map((ticket) => `<tr><td><strong>${escapeHtml(ticket.name)}</strong><br/><small>${escapeHtml(campaignById[ticket.campaign_id]?.name || "Unknown event")}</small></td><td>${escapeHtml(ticket.price_label || money(ticket.price_amount))}</td><td>${ticket.quantity_sold} sold · ${ticket.quantity_reserved || 0} held${ticket.quantity_total == null ? " / Unlimited" : ` / ${ticket.quantity_total}`}</td><td>${badge(ticket.status)}</td><td><div class="admin-actions"><button class="button button--small button--ghost" data-ticket-status="${ticket.id}" data-status="active">Activate</button><button class="button button--small button--ghost" data-ticket-status="${ticket.id}" data-status="paused">Pause</button><button class="button button--small button--ghost" data-ticket-status="${ticket.id}" data-status="sold_out">Sold Out</button></div></td></tr>`).join("");
@@ -169,7 +169,7 @@ function tabContent() {
 
 function adminShell() {
   const nav = tabs.map(([id,label,iconName]) => `<button type="button" class="${state.tab === id ? "is-active" : ""}" data-tab="${id}">${icon(iconName)} ${escapeHtml(label)}</button>`).join("");
-  appRoot.innerHTML = `<div class="admin-layout"><aside class="admin-sidebar${state.sidebar ? " is-open" : ""}"><div class="admin-sidebar__brand"><img src="${CONFIG.assets.logo}" alt="Hangar 18" /><span>Management Portal</span></div><nav class="admin-nav">${nav}</nav><div class="admin-sidebar__footer"><a class="button button--ghost button--small" href="/" target="_blank">Open Website</a><button class="button button--ghost button--small js-admin-logout" type="button">Sign Out</button></div></aside><main class="admin-main"><header class="admin-topbar"><div style="display:flex;align-items:center;gap:.7rem"><button class="admin-mobile-toggle" type="button">${icon("menu")}</button><div><h1>${escapeHtml(tabs.find(([id]) => id === state.tab)?.[1] || "Dashboard")}</h1><small>${escapeHtml(state.user?.email || "Hangar 18 management")}</small></div></div><button class="button button--small button--ghost js-admin-refresh" type="button">${icon("refresh")} Refresh</button></header><div class="admin-content">${tabContent()}</div></main></div>`;
+  appRoot.innerHTML = `<div class="admin-layout"><aside class="admin-sidebar${state.sidebar ? " is-open" : ""}"><div class="admin-sidebar__brand"><img src="${CONFIG.assets.logo}" alt="Truckers Pub" /><span>Management Portal</span></div><nav class="admin-nav">${nav}</nav><div class="admin-sidebar__footer"><a class="button button--ghost button--small" href="/" target="_blank">Open Website</a><button class="button button--ghost button--small js-admin-logout" type="button">Sign Out</button></div></aside><main class="admin-main"><header class="admin-topbar"><div style="display:flex;align-items:center;gap:.7rem"><button class="admin-mobile-toggle" type="button">${icon("menu")}</button><div><h1>${escapeHtml(tabs.find(([id]) => id === state.tab)?.[1] || "Dashboard")}</h1><small>${escapeHtml(state.user?.email || "Truckers Pub management")}</small></div></div><button class="button button--small button--ghost js-admin-refresh" type="button">${icon("refresh")} Refresh</button></header><div class="admin-content">${tabContent()}</div></main></div>`;
   wireAdmin();
 }
 
@@ -197,7 +197,7 @@ function wireAdmin() {
   document.querySelectorAll("[data-tab]").forEach((button) => button.addEventListener("click", () => { state.tab = button.dataset.tab; state.sidebar = false; adminShell(); scrollTo(0,0); }));
   document.querySelector(".admin-mobile-toggle")?.addEventListener("click", () => { state.sidebar = !state.sidebar; document.querySelector(".admin-sidebar").classList.toggle("is-open", state.sidebar); });
   document.querySelector(".js-admin-logout")?.addEventListener("click", () => { logout(); state.session = state.user = state.data = null; loginView(); });
-  document.querySelector(".js-admin-refresh")?.addEventListener("click", () => reload("Hangar 18 data refreshed.").catch((error) => showToast(error.message, true)));
+  document.querySelector(".js-admin-refresh")?.addEventListener("click", () => reload("Truckers Pub data refreshed.").catch((error) => showToast(error.message, true)));
 
   document.querySelector(".js-site-form")?.addEventListener("submit", async (event) => {
     event.preventDefault(); const form = event.currentTarget; const values = formObject(form); const site = state.data.site;
@@ -214,7 +214,7 @@ function wireAdmin() {
   document.querySelector(".js-event-form")?.addEventListener("submit", async (event) => {
     event.preventDefault(); const form = event.currentTarget; const values = formObject(form);
     const publicSlug = slugify(values.name);
-    values.slug = `hangar-18-${publicSlug}-${Math.random().toString(36).slice(2,6)}`;
+    values.slug = `truckers-pub-${publicSlug}-${Math.random().toString(36).slice(2,6)}`;
     values.starts_at = values.starts_at ? new Date(values.starts_at).toISOString() : null;
     values.ends_at = values.ends_at ? new Date(values.ends_at).toISOString() : null;
     values.metadata = { public_slug: publicSlug, price_label: values.price_label || null, special_guest: values.special_guest || null, ticketing_mode: values.ticketing_mode, external_ticket_url: values.external_ticket_url || null, category: "live music" };
@@ -280,14 +280,14 @@ function wireAdmin() {
 
   document.querySelectorAll("[data-copy-campaign]").forEach((button) => button.addEventListener("click", async () => {
     const event = state.data.campaigns.find((item) => item.id === button.dataset.copyCampaign);
-    const url = `${location.origin}/event/${event?.metadata?.public_slug || event?.slug?.replace(/^hangar-18-/, "")}`;
+    const url = `${location.origin}/event/${event?.metadata?.public_slug || event?.slug?.replace(/^truckers-pub-/, "")}`;
     await navigator.clipboard.writeText(url); showToast("Event link copied.");
   }));
 }
 
 export async function bootAdmin() {
   document.body.classList.add("admin-body");
-  appRoot.innerHTML = `<main class="boot-screen"><img src="${CONFIG.assets.loadingLogo}" alt="Hangar 18" /><div class="boot-spinner"></div><p>Opening management portal…</p></main>`;
+  appRoot.innerHTML = `<main class="boot-screen"><img src="${CONFIG.assets.logo}" alt="Truckers Pub" /><div class="boot-spinner"></div><p>Opening management portal…</p></main>`;
   try {
     const auth = await currentUser(state.session);
     if (!auth) { loginView(); return; }
@@ -297,7 +297,7 @@ export async function bootAdmin() {
   } catch (error) {
     console.error(error);
     if (error.status === 401) { logout(); loginView(); return; }
-    appRoot.innerHTML = `<main class="admin-login"><section class="admin-login__visual" style="--hero-image:url('${CONFIG.assets.hero}')"><img src="${CONFIG.assets.logo}" alt="Hangar 18" /><h1>Hangar 18 Management</h1></section><section class="admin-login__form"><div class="admin-login__card"><h2>Access needs attention.</h2><p>${escapeHtml(error.message || "This account could not load Hangar 18 management data.")}</p><div class="button-row"><button class="button button--primary js-admin-retry">Try Again</button><button class="button button--ghost js-admin-signout">Sign Out</button><a class="button button--ghost" href="/">Public Site</a></div></div></section></main>`;
+    appRoot.innerHTML = `<main class="admin-login"><section class="admin-login__visual" style="--hero-image:url('${CONFIG.assets.hero}')"><img src="${CONFIG.assets.logo}" alt="Truckers Pub" /><h1>Truckers Pub Management</h1></section><section class="admin-login__form"><div class="admin-login__card"><h2>Access needs attention.</h2><p>${escapeHtml(error.message || "This account could not load Truckers Pub management data.")}</p><div class="button-row"><button class="button button--primary js-admin-retry">Try Again</button><button class="button button--ghost js-admin-signout">Sign Out</button><a class="button button--ghost" href="/">Public Site</a></div></div></section></main>`;
     document.querySelector(".js-admin-retry")?.addEventListener("click", bootAdmin);
     document.querySelector(".js-admin-signout")?.addEventListener("click", () => { logout(); loginView(); });
   }

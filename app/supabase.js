@@ -1,7 +1,7 @@
 import { CONFIG } from "./config.js";
 
-const SESSION_KEY = "h18-admin-session";
-const TRACKING_KEY = "h18-promo-proof";
+const SESSION_KEY = "truckerspub-admin-session";
+const TRACKING_KEY = "truckerspub-promo-proof";
 const baseHeaders = { apikey: CONFIG.supabaseAnonKey, "Content-Type": "application/json" };
 
 function cleanError(payload, fallback) {
@@ -77,15 +77,29 @@ export async function refreshSession(session = readSession()) {
 }
 
 export async function currentUser(session = readSession()) {
-  if (!session?.access_token) return null;
-  let active = session;
-  if (session.expires_at && session.expires_at * 1000 < Date.now() + 60000) {
-    active = await refreshSession(session);
+  let active = session || readSession();
+  if (!active?.access_token && active?.refresh_token) {
+    active = await refreshSession(active).catch(() => null);
+  }
+  if (!active?.access_token) return null;
+  if (active.expires_at && active.expires_at * 1000 < Date.now() + 60000) {
+    active = await refreshSession(active).catch(() => null);
   }
   if (!active?.access_token) return null;
   const response = await fetch(`${CONFIG.supabaseUrl}/auth/v1/user`, {
     headers: authHeaders(active.access_token)
   });
+  if (response.status === 401 && active.refresh_token) {
+    const refreshed = await refreshSession(active).catch(() => null);
+    if (refreshed?.access_token) {
+      const retry = await fetch(`${CONFIG.supabaseUrl}/auth/v1/user`, {
+        headers: authHeaders(refreshed.access_token)
+      });
+      if (retry.ok) return { user: await parse(retry), session: refreshed };
+    }
+    writeSession(null);
+    return null;
+  }
   if (response.status === 401) {
     writeSession(null);
     return null;
@@ -114,9 +128,9 @@ export function trackingState() {
     ref: params.get("pp_ref") || saved.ref || "",
     campaign: params.get("pp_campaign") || saved.campaign || "",
     visitorKey: saved.visitorKey || crypto.randomUUID?.() || `visitor-${Date.now()}-${Math.random().toString(36).slice(2)}`,
-    sessionId: sessionStorage.getItem("h18-session-id") || crypto.randomUUID?.() || `session-${Date.now()}-${Math.random().toString(36).slice(2)}`
+    sessionId: sessionStorage.getItem("truckerspub-session-id") || crypto.randomUUID?.() || `session-${Date.now()}-${Math.random().toString(36).slice(2)}`
   };
-  sessionStorage.setItem("h18-session-id", next.sessionId);
+  sessionStorage.setItem("truckerspub-session-id", next.sessionId);
   localStorage.setItem(TRACKING_KEY, JSON.stringify(next));
   return next;
 }
@@ -168,7 +182,7 @@ export async function createTicketOrder(slug, values, items) {
     p_customer_phone: values.phone || null,
     p_items: items,
     p_tracking_token: tracking.token || null,
-    p_metadata: { source: "hangar18-site", path: location.pathname }
+    p_metadata: { source: "truckerspub-site", path: location.pathname }
   });
 }
 
@@ -188,7 +202,7 @@ export async function loadAdminData(token) {
   await claimVenueAccess(token).catch(() => null);
   const sites = await rest(`promo_proof_venue_sites?site_key=eq.${CONFIG.siteKey}&select=*`, { token });
   const site = sites?.[0];
-  if (!site) throw new Error("This account does not have Hangar 18 management access.");
+  if (!site) throw new Error("This account does not have Truckers Pub management access.");
   const venueId = site.venue_id;
 
   const [campaigns, submissions, orders, admins, venuePromoters] = await Promise.all([
@@ -285,7 +299,7 @@ export async function markOrderPaid(token, orderId, orderNumber) {
     p_order_id: orderId,
     p_payment_provider: "manual",
     p_payment_session_id: `manual-${orderNumber}`,
-    p_payment_reference: "Confirmed in Hangar 18 management"
+    p_payment_reference: "Confirmed in Truckers Pub management"
   }, token);
 }
 
@@ -303,3 +317,4 @@ export async function inviteAdmin(token, venueId, email, role = "manager") {
 export async function updateAdmin(token, id, venueId, patch) {
   return rest(`promo_proof_venue_admins?id=eq.${id}&venue_id=eq.${venueId}`, { method: "PATCH", token, headers: { Prefer: "return=representation" }, body: patch });
 }
+
