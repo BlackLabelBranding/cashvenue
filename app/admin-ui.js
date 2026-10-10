@@ -16,6 +16,7 @@ import {
   updateTicketType
 } from "./supabase.js";
 import { CONFIG } from "./config.js";
+import { hasBlackLabelSignIn, startBlackLabelSignIn, completeBlackLabelSignIn } from "./blacklabel-oauth.js";
 import { appRoot, escapeHtml, formatDate, icon, safeUrl, showToast } from "./ui.js";
 
 const state = { session: null, user: null, data: null, tab: "dashboard", sidebar: false };
@@ -61,8 +62,13 @@ function metric(label, value) {
 
 function loginView() {
   document.body.classList.add("admin-body");
-  appRoot.innerHTML = `<main class="admin-login" style="--hero-image:url('${CONFIG.assets.hero}')"><section class="admin-login__visual"><img src="${CONFIG.assets.logo}" alt="Hangar 18" /><h1>Hangar 18 Management</h1></section><section class="admin-login__form"><div class="admin-login__card"><p class="eyebrow">VENUE ACCESS</p><h2>Sign in to manage the hangar.</h2><p>Events, tickets, inquiries, website content, ordering links, staff promotion, and performance data.</p><form class="js-admin-login"><div class="stack">${field("Email", "email", "", { type: "email", required: true })}${field("Password", "password", "", { type: "password", required: true })}<button class="button button--primary" type="submit">${icon("login")} Sign In</button><button class="button button--ghost js-reset-password" type="button">Send Password Reset</button><a class="button button--ghost js-route" href="/">Return to Website</a><p class="form-status" role="status"></p></div></form></div></section></main>`;
+  appRoot.innerHTML = `<main class="admin-login" style="--hero-image:url('${CONFIG.assets.hero}')"><section class="admin-login__visual"><img src="${CONFIG.assets.logo}" alt="Hangar 18" /><h1>Hangar 18 Management</h1></section><section class="admin-login__form"><div class="admin-login__card"><p class="eyebrow">VENUE ACCESS</p><h2>Sign in to manage the hangar.</h2><p>Events, tickets, inquiries, website content, ordering links, staff promotion, and performance data.</p><form class="js-admin-login"><div class="stack">${field("Email", "email", "", { type: "email", required: true })}${field("Password", "password", "", { type: "password", required: true })}<button class="button button--primary" type="submit">${icon("login")} Sign In</button>${hasBlackLabelSignIn() ? `<button class="button button--ghost js-blb-oauth" type="button">Sign in with My Black Label</button>` : ""}<button class="button button--ghost js-reset-password" type="button">Send Password Reset</button><a class="button button--ghost js-route" href="/">Return to Website</a><p class="form-status" role="status"></p></div></form></div></section></main>`;
 
+  document.querySelector(".js-blb-oauth")?.addEventListener("click", async () => {
+    const status = document.querySelector(".js-admin-login .form-status");
+    try {await startBlackLabelSignIn();}
+    catch(e) {if(status){status.textContent=e.message || "Sign-in unavailable";status.className="form-status is-error";}}
+  });
   const form = document.querySelector(".js-admin-login");
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
@@ -283,7 +289,8 @@ export async function bootAdmin() {
   document.body.classList.add("admin-body");
   appRoot.innerHTML = `<main class="boot-screen"><img src="${CONFIG.assets.logo}" alt="Hangar 18" /><div class="boot-spinner"></div><p>Opening management portal…</p></main>`;
   try {
-    const auth = await currentUser(state.session);
+    await completeBlackLabelSignIn();
+    const auth = await currentUser();
     if (!auth) { loginView(); return; }
     state.user = auth.user; state.session = auth.session;
     state.data = await loadAdminData(state.session.access_token);
