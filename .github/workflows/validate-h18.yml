@@ -1,0 +1,53 @@
+name: Validate Hangar 18 Site
+
+on:
+  push:
+    branches: [h18brewing-site]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Use Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Validate JavaScript syntax
+        run: |
+          find app -type f -name '*.js' -print0 | xargs -0 -n1 node --check
+
+      - name: Validate JSON
+        run: |
+          python -m json.tool manifest.webmanifest >/dev/null
+          python -m json.tool vercel.json >/dev/null
+
+      - name: Smoke-test static files
+        run: |
+          python -m http.server 8080 >/tmp/h18-http.log 2>&1 &
+          server_pid=$!
+          trap 'kill $server_pid' EXIT
+          sleep 2
+          curl --fail http://127.0.0.1:8080/ >/dev/null
+          curl --fail http://127.0.0.1:8080/styles.css >/dev/null
+          curl --fail http://127.0.0.1:8080/app/main.js >/dev/null
+
+      - name: Package site
+        run: |
+          zip -r h18brewing-site.zip index.html styles.css app manifest.webmanifest robots.txt sitemap.xml vercel.json README-H18.md
+
+      - name: Upload validated site artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: h18brewing-site
+          path: h18brewing-site.zip
+          retention-days: 30
