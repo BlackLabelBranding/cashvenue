@@ -66,6 +66,34 @@ export async function login(email, password) {
 
 export async function refreshSession(session = readSession()) {
   if (!session?.refresh_token) return null;
+  // OAuth refresh tokens are bound to the public venue client and must use the
+  // OAuth token endpoint; ordinary GoTrue sessions retain the existing flow.
+  if (session.session_source === "blacklabel_oauth") {
+    const clientId = String(CONFIG.oauthClientId || "");
+    if (!clientId || clientId !== session.oauth_client_id) {
+      writeSession(null);
+      throw new Error("This venue login was reconfigured. Please sign in again.");
+    }
+    const response = await fetch(`${CONFIG.supabaseUrl}/auth/v1/oauth/token`, {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        grant_type: "refresh_token",
+        client_id: clientId,
+        refresh_token: session.refresh_token
+      })
+    });
+    const next = await parse(response);
+    const refreshed = {
+      ...session,
+      access_token: next.access_token,
+      refresh_token: next.refresh_token,
+      expires_in: Number(next.expires_in || 3600),
+      expires_at: Math.floor(Date.now()/1000) + Number(next.expires_in || 3600),
+    };
+    writeSession(refreshed);
+    return refreshed;
+  }
   const response = await fetch(`${CONFIG.supabaseUrl}/auth/v1/token?grant_type=refresh_token`, {
     method: "POST",
     headers: baseHeaders,
