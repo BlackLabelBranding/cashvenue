@@ -90,6 +90,8 @@ export async function completeBlackLabelSignIn() {
   }
   // Only save the session obtained by PKCE from our registered identity provider.
   writeSession({
+    session_source: "blacklabel_oauth",
+    oauth_client_id: saved.clientId,
     access_token: tokens.access_token,
     refresh_token: tokens.refresh_token,
     token_type: "bearer",
